@@ -1,0 +1,2 @@
+# Skin Mod Swap Trigger
+placements.triggers.SkinModHelper/SkinModSwapTrigger.tooltips.skinId=The skin ID to apply. This should be the same ID as the one in SkinModHelperConfig.yaml.
