@@ -22,7 +22,11 @@ namespace SkinModHelper.Module
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
         public static TextMenu.Option<string> skinSelectMenu;
 
-        ILHook TextboxRunRoutineHook;
+        private static ILHook TextboxRunRoutineHook;
+        private static List<string> spritesWithHair = new List<string>() 
+        { 
+            "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
+        };
 
         public SkinModHelperModule()
         {
@@ -42,6 +46,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
 
+            IL.Celeste.PlayerHair.ctor += PlayerHairHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
@@ -57,6 +62,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
 
+            IL.Celeste.PlayerHair.ctor -= PlayerHairHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
         }
@@ -115,6 +121,26 @@ namespace SkinModHelper.Module
             }
         }
 
+        private void PlayerHairHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/bangs"))) {
+                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing bangs path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                cursor.EmitDelegate<Func<string, string>>((string bangsPath) => ReplaceBangsPath(bangsPath));
+            }
+        }
+
+        string ReplaceBangsPath(string bangsPath)
+        {
+            string skinModPlayerSpriteId = "madeline_" + Settings.SelectedSkinMod;
+            if (GFX.SpriteBank.Has(skinModPlayerSpriteId))
+            {
+                XmlElement xml = GFX.SpriteBank.SpriteData[skinModPlayerSpriteId].Sources[0].XML;
+                return xml.Attr("path", "characters/player/") + "bangs";
+            }
+            return bangsPath;
+        }
+
         // This one requires double hook - for some reason they implemented a tiny version of the Textbox class that behaves differently
         private void CampfireQuestionHook(ILContext il)
         {
@@ -170,6 +196,11 @@ namespace SkinModHelper.Module
                 if (mod.Map.TryGetValue("Graphics/SkinModHelper/SkinModHelperConfig", out ModAsset configAsset))
                 {
                     skinConfig = LoadConfigFile(configAsset);
+                    if (skinConfigs.ContainsKey(skinConfig.SkinId))
+                    {
+                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate skin mod ID {skinConfig.SkinId}, will not register.");
+                        continue;
+                    }
                     skinConfigs.Add(skinConfig.SkinId, skinConfig);
 
                     // Change selection to this skin if it matches our last setting
@@ -221,6 +252,12 @@ namespace SkinModHelper.Module
 
                     string newSpriteId = spriteId + "_" + skinId;
                     origBank.SpriteData[newSpriteId] = newSpriteData;
+
+                    // Build hair!
+                    if (spritesWithHair.Contains(spriteId))
+                    {
+                        PlayerSprite.CreateFramesMetadata(newSpriteId);
+                    }
                 }
             }
         }
