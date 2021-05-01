@@ -1,13 +1,12 @@
 Celeste Skin Mod Helper
 ==========================
-
-This is an [Everest](https://everestapi.github.io/) mod for [Celeste](http://www.celestegame.com/) that provides tools and support for skin modding.
+This is an [Everest](https://everestapi.github.io/) mod for [Celeste](http://www.celestegame.com/) 
+that provides tools and support for skin modding.
 
 
 Installation Guide
 ------------------
-
-1. Install [Everest](https://everestapi.github.io/) for [Celeste](http://www.celestegame.com/).
+1. Install [Everest/Olympus](https://everestapi.github.io/) for [Celeste](http://www.celestegame.com/).
 2. Install [Skin Mod Helper]() from GameBanana.
 3. Install any compatible skin mod from GameBanana.
 
@@ -16,13 +15,14 @@ Currently known compatible skin mods include:
 2. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
 3. [Tutorial Bird Skinmod](https://gamebanana.com/skins/186581) by Nikko
 
+
 Features
 ------------
-
 **For Players**:
-![menu](docs/img/menu.PNG)
+![menu](docs/img/menu.png)
 
-Swap between skin mods on the fly using the mod options menu, no restart required! You can do this from the main menu or from in-game.
+Swap between skin mods on the fly using the mod options menu, no restart required! 
+You can do this from the main menu or from in-game.
 
 
 **For Mappers**:
@@ -33,17 +33,18 @@ Use the SkinModSwapTrigger to change the player's skin to any loaded skin mod!
 **For Skin Modders**:
 
 Currently reskinnable objects include:
-1. Sprites
+1. Player, Other Self, and other sprites defined in Sprites.xml
 2. Portraits
 3. Textboxes
 
-Setting up your skin mod correctly requires some configuration. See the [guide](docs/guide.md) for more information.
+Setting up your skin mod correctly requires some configuration. 
+See the [guide](docs/guide/README.md) for more information.
 
 
 Contact
 -------
-
-If you encounter any issues or have suggestions, you can reach me on Discord (Bigkahuna#0491) or ping me in the #modding-feedback channel in the main [Celeste Discord](https://discord.gg/celeste).
+If you encounter any issues or have suggestions, you can reach me on Discord (Bigkahuna#0491) or 
+ping me in the #modding-feedback channel in the main [Celeste Discord](https://discord.gg/celeste).
 
 
 Credits

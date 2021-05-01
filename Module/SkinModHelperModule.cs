@@ -192,22 +192,27 @@ namespace SkinModHelper.Module
 
             foreach (ModContent mod in Everest.Content.Mods)
             {
-                SkinModHelperConfig skinConfig = null;
-                if (mod.Map.TryGetValue("Graphics/SkinModHelper/SkinModHelperConfig", out ModAsset configAsset))
+                SkinModHelperConfig config = null;
+                if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
                 {
-                    skinConfig = LoadConfigFile(configAsset);
-                    if (skinConfigs.ContainsKey(skinConfig.SkinId))
+                    config = LoadConfigFile(configAsset);
+                    if (string.IsNullOrEmpty(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
                     {
-                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate skin mod ID {skinConfig.SkinId}, will not register.");
+                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
                         continue;
                     }
-                    skinConfigs.Add(skinConfig.SkinId, skinConfig);
+                    if (!Dialog.Has(config.SkinDialogKey))
+                    {
+                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Missing or invalid dialog key {config.SkinDialogKey}, will not register.");
+                        continue;
+                    }
+                    skinConfigs.Add(config.SkinId, config);
 
                     // Change selection to this skin if it matches our last setting
-                    bool selected = (skinConfig.SkinId == Settings.SelectedSkinMod);
-                    skinSelectMenu.Add(Dialog.Clean(skinConfig.SkinDialogKey), skinConfig.SkinId, selected);
+                    bool selected = (config.SkinId == Settings.SelectedSkinMod);
+                    skinSelectMenu.Add(Dialog.Clean(config.SkinDialogKey), config.SkinId, selected);
 
-                    Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {skinConfig.SkinId}");
+                    Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
                 }
             }
 
