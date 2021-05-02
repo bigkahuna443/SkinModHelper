@@ -7,13 +7,11 @@ that provides tools and support for skin modding.
 Installation Guide
 ------------------
 1. Install [Everest/Olympus](https://everestapi.github.io/) for [Celeste](http://www.celestegame.com/).
-2. Install [Skin Mod Helper]() from GameBanana.
+2. Install [Skin Mod Helper](https://gamebanana.com/mods/166543) from GameBanana.
 3. Install any compatible skin mod from GameBanana.
 
 Currently known compatible skin mods include:
-1. [Nath](https://gamebanana.com/skins/192088) by Nikko
-2. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
-3. [Tutorial Bird Skinmod](https://gamebanana.com/skins/186581) by Nikko
+1. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
 
 
 Features
