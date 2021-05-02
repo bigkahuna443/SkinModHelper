@@ -27,19 +27,19 @@ e.g. "Graphics/Bigkahuna/MySkin/Sprites.xml".
 
 You should follow these steps to set up your XMLs:
 1. Copy the vanilla version of the XML.
-  * You can find them in Celeste/Contest/Graphics/.
+   * You can find them in Celeste/Contest/Graphics/.
 2. Take out the sprites and animations you aren't reskinning.
-  * These will automatically be replaced vanilla sprites/animations.
-  * For Sprites.xml, make sure to remove the "Metadata" section for any animations you remove.
+   * These will automatically be replaced vanilla sprites/animations.
+   * For Sprites.xml, make sure to remove the "Metadata" section for any animations you remove.
 3. Change the "path" fields to the correct path for your skin and put the files there.
-  * For Sprites.xml, the base folder is "Graphics/Atlases/Gameplay". So for example, for the player
+   * For Sprites.xml, the base folder is "Graphics/Atlases/Gameplay". So for example, for the player
     sprite I would use "path=Bigkahuna/MySkin/characters/player/" and put the images in
     "Graphics/Atlases/Gameplay/Bigkahuna/MySkin/characters/player/".
-  * For Portraits.xml, the base folder is "Graphics/Atlases/Portraits". If you have textbox
+   * For Portraits.xml, the base folder is "Graphics/Atlases/Portraits". If you have textbox
     reskins, you should use "Graphics/Atlases/Portraits/textbox" as the base folder.
 4. Tweak any animation values that you want.
-  * You can edit the "delay", "frames", and "goto" attributes of animations to change how they work.
-  * For Sprites.xml, you can change the bangs for a sprite, by editing the "hair" frames for
+   * You can edit the "delay", "frames", and "goto" attributes of animations to change how they work.
+   * For Sprites.xml, you can change the bangs for a sprite, by editing the "hair" frames for
     each animation under "Metadata". You can remove hair for a certain frame by putting "|x|" for
     that frame, or remove hair entirely for that animation by removing the whole line.
 
