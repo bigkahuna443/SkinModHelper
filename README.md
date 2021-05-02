@@ -21,7 +21,7 @@ Features
 **For Players**:
 ![menu](docs/img/menu.png)
 
-Swap between skin mods on the fly using the mod options menu, no restart required! 
+Swap between compatible skin mods on the fly using the mod options menu, no restart required! 
 You can do this from the main menu or from in-game.
 
 
@@ -55,3 +55,8 @@ Credits
 **Coding Support**:
 * max480
 * Viv
+
+**Special Thanks**:
+* crowberry
+* Nikko
+* Zaro

@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Xml;
+using System.Text.RegularExpressions;
 
 namespace SkinModHelper.Module
 {
@@ -20,7 +20,6 @@ namespace SkinModHelper.Module
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
 
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
-        public static TextMenu.Option<string> skinSelectMenu;
 
         private static ILHook TextboxRunRoutineHook;
         private static List<string> spritesWithHair = new List<string>() 
@@ -31,9 +30,7 @@ namespace SkinModHelper.Module
         public SkinModHelperModule()
         {
             Instance = this;
-
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
-            skinSelectMenu = new TextMenu.Option<string>("");
         }
 
         public override void Load()
@@ -41,7 +38,6 @@ namespace SkinModHelper.Module
             Logger.SetLogLevel("SkinModHelper/SkinModHelperModule", LogLevel.Warn);
             Logger.Log("SkinModHelper/SkinModHelperModule", "Initializing SkinModHelper");
 
-            On.Celeste.Dialog.Load += DialogLoadHook;
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
@@ -53,11 +49,16 @@ namespace SkinModHelper.Module
                 SwapTextboxHook);
         }
 
+        public override void LoadContent(bool firstLoad)
+        {
+            base.LoadContent(firstLoad);
+            InitializeSettings();
+        }
+
         public override void Unload()
         {
             Logger.Log("SkinModHelper/SkinModHelperModule", "Unloading SkinModHelper");
 
-            On.Celeste.Dialog.Load -= DialogLoadHook;
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
@@ -65,13 +66,6 @@ namespace SkinModHelper.Module
             IL.Celeste.PlayerHair.ctor -= PlayerHairHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
-        }
-
-        // Wait for Dialog module to load so we can set up menu
-        private void DialogLoadHook(On.Celeste.Dialog.orig_Load orig)
-        {
-            orig();
-            InitializeSettings();
         }
 
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
@@ -101,8 +95,14 @@ namespace SkinModHelper.Module
             foreach (KeyValuePair<string, SkinModHelperConfig> config in skinConfigs)
             {
                 string skinId = config.Key;
-                CombineSpriteBanks(GFX.SpriteBank, skinId, config.Value.SpritesXmlPath);
-                CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, config.Value.PortraitsXmlPath);
+                if (skinId == SkinModHelperConfig.DEFAULT_SKIN)
+                {
+                    continue;
+                }
+                string spritesXmlPath = "Graphics/" + config.Value.GetUniquePath() + "Sprites.xml";
+                string portraitsXmlPath = "Graphics/" + config.Value.GetUniquePath() + "Portraits.xml";
+                CombineSpriteBanks(GFX.SpriteBank, skinId, spritesXmlPath);
+                CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
             }
             orig(self);
         }
@@ -132,11 +132,13 @@ namespace SkinModHelper.Module
 
         string ReplaceBangsPath(string bangsPath)
         {
-            string skinModPlayerSpriteId = "madeline_" + Settings.SelectedSkinMod;
-            if (GFX.SpriteBank.Has(skinModPlayerSpriteId))
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
-                XmlElement xml = GFX.SpriteBank.SpriteData[skinModPlayerSpriteId].Sources[0].XML;
-                return xml.Attr("path", "characters/player/") + "bangs";
+                string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
+                if (GFX.Game.Has(newBangsPath + "00"))
+                {
+                    bangsPath = newBangsPath;
+                }
             }
             return bangsPath;
         }
@@ -166,58 +168,55 @@ namespace SkinModHelper.Module
 
         FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
         {
-            string skinModPortraitSpriteId = portrait.SpriteId + "_" + Settings.SelectedSkinMod;
-            if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId))
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
-                portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
+                string skinModPortraitSpriteId = portrait.SpriteId + "_" + Settings.SelectedSkinMod;
+                if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId))
+                {
+                    portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
+                }
             }
             return portrait;
         }
 
+        // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
         string ReplaceTextboxPath(string textboxPath)
         {
-            int len = textboxPath.Length;
-            string portraitId = "portrait_" + textboxPath.Substring(8, len - 12); // "textbox/[id]_ask"
-            if (GFX.PortraitsSpriteBank.Has(portraitId))
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
-                XmlElement xml = GFX.PortraitsSpriteBank.SpriteData[portraitId].Sources[0].XML;
-                return "textbox/" + xml.Attr("textbox", "default") + "_ask";
+                string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
+                string newTextboxPath = "textbox/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + originalPortraitId + "_ask";
+                if (GFX.Portraits.Has(newTextboxPath))
+                {
+                    textboxPath = newTextboxPath;
+                }
             }
             return textboxPath;
         }
 
         private void InitializeSettings()
         {
-            skinSelectMenu.Add(Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DEFAULT"), "default", true);
-
             foreach (ModContent mod in Everest.Content.Mods)
             {
                 SkinModHelperConfig config = null;
                 if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
                 {
                     config = LoadConfigFile(configAsset);
-                    if (string.IsNullOrEmpty(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
+                    Regex r = new Regex(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
+                    if (string.IsNullOrEmpty(config.SkinId) || !r.IsMatch(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
                     {
                         Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
                         continue;
                     }
-                    if (!Dialog.Has(config.SkinDialogKey))
+                    if (string.IsNullOrEmpty(config.SkinDialogKey))
                     {
                         Logger.Log("SkinModHelper/SkinModHelperModule", $"Missing or invalid dialog key {config.SkinDialogKey}, will not register.");
                         continue;
                     }
                     skinConfigs.Add(config.SkinId, config);
-
-                    // Change selection to this skin if it matches our last setting
-                    bool selected = (config.SkinId == Settings.SelectedSkinMod);
-                    skinSelectMenu.Add(Dialog.Clean(config.SkinDialogKey), config.SkinId, selected);
-
                     Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
                 }
             }
-
-            // Set our update action on our complete menu
-            skinSelectMenu.Change(skinId => UpdateSprite(skinId));
         }
 
         private static SkinModHelperConfig LoadConfigFile(ModAsset skinConfigYaml)
@@ -226,7 +225,7 @@ namespace SkinModHelper.Module
         }
 
         // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
-        public void UpdateSprite(string skinId)
+        public static void UpdateSkin(string skinId)
         {
             Settings.SelectedSkinMod = skinId;
             Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();

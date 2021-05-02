@@ -3,6 +3,7 @@ using Celeste.Mod;
 using Celeste.Mod.Entities;
 using SkinModHelper.Module;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace SkinModHelper
 {
@@ -10,28 +11,34 @@ namespace SkinModHelper
     class SkinModSwapTrigger : Trigger
     {
         private string skinId;
+        private string oldId;
+        private bool revertOnLeave;
 
         public SkinModSwapTrigger(EntityData data, Vector2 offset) : base(data, offset)
         {
-            skinId = data.Attr("skinId", "default");
+            skinId = data.Attr("skinId", "default_skin");
+            revertOnLeave = data.Bool("revertOnLeave", false);
         }
 
         public override void OnEnter(Player player)
         {
             base.OnEnter(player);
-            if (!SkinModHelperModule.skinConfigs.ContainsKey(skinId))
+            if (skinId != SkinModHelperConfig.DEFAULT_SKIN && !SkinModHelperModule.skinConfigs.ContainsKey(skinId))
             {
                 Logger.Log("SkinModHelper/SkinModSwapTrigger", $"Tried to swap to unknown skin ID {skinId}.");
-                skinId = "default";
+                return;
             }
-            SkinModHelperModule.Instance.UpdateSprite(skinId);
-            UpdateMenuOption(SkinModHelperModule.skinSelectMenu, skinId);
+            oldId = SkinModHelperModule.Settings.SelectedSkinMod;
+            SkinModHelperModule.UpdateSkin(skinId);
         }
 
-        private void UpdateMenuOption(TextMenu.Option<string> option, string newValue)
+        public override void OnLeave(Player player)
         {
-            option.PreviousIndex = option.Index;
-            option.Index = option.Values.FindIndex(entry => entry.Item2 == newValue);
+            base.OnLeave(player);
+            if (revertOnLeave)
+            {
+                SkinModHelperModule.UpdateSkin(oldId);
+            }
         }
     }
 }

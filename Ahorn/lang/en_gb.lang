@@ -1,2 +1,3 @@
 # Skin Mod Swap Trigger
 placements.triggers.SkinModHelper/SkinModSwapTrigger.tooltips.skinId=The skin ID to apply. This should be the same ID as the one in SkinModHelperConfig.yaml.
+placements.triggers.SkinModHelper/SkinModSwapTrigger.tooltips.revertOnLeave=If checked, the previous skin will be restored upon exiting the trigger.
