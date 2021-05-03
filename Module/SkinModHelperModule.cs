@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace SkinModHelper.Module
 {
@@ -41,12 +42,44 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
+            //On.Celeste.CompleteRenderer.ctor_XmlElement_Atlas_float_Action += CompleteRendererHook;
 
-            IL.Celeste.PlayerHair.ctor += PlayerHairHook;
+            On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
+        }
+
+        private void CompleteRendererHook(On.Celeste.CompleteRenderer.orig_ctor_XmlElement_Atlas_float_Action orig, CompleteRenderer self, XmlElement xml, Atlas atlas, float delay, Action onDoneSlide)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                XmlDocument newEndscreenXml = Calc.LoadContentXML("Graphics/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "CompleteScreens.xml");
+                if (newEndscreenXml.HasChildNodes && newEndscreenXml["Screens"].HasChild(xml.Name))
+                {
+                    XmlElement newXml = newEndscreenXml["Screens"][xml.Name];
+                    string endscreenPath = "Graphics/" + "Atlases/" + newXml.Attr("atlas");
+                    Atlas newAtlas = new Atlas();
+                    newAtlas.RelativeDataPath = endscreenPath;
+                    foreach (XmlElement layer in newEndscreenXml["Screens"][xml.Name]["layers"])
+                    {
+                        if (layer.Name == "layer")
+                        {
+                            if (Everest.Content.Map.TryGetValue(endscreenPath + "/" + layer.Attr("img"), out ModAsset asset))
+                            {
+                                newAtlas.Ingest(asset);
+                            }
+                        }
+                    }
+                    Console.WriteLine(newAtlas.RelativeDataPath);
+                    orig(self, newXml, newAtlas, delay, onDoneSlide);
+                }
+            }
+            else
+            {
+                orig(self, xml, atlas, delay, onDoneSlide);
+            }
         }
 
         public override void LoadContent(bool firstLoad)
@@ -62,10 +95,32 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
+            //On.Celeste.CompleteRenderer.ctor_XmlElement_Atlas_float_Action -= CompleteRendererHook;
 
-            IL.Celeste.PlayerHair.ctor -= PlayerHairHook;
+            On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
+        }
+
+        private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                if (index == 0)
+                {
+                    string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
+                    if (GFX.Game.Has(newBangsPath + "00"))
+                    {
+                        return GFX.Game.GetAtlasSubtextures(newBangsPath)[self.Sprite.HairFrame];
+                    }
+                }
+                string newHairPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/hair00";
+                if (GFX.Game.Has(newHairPath))
+                {
+                    return GFX.Game[newHairPath];
+                }
+            }
+            return orig(self, index);
         }
 
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
@@ -119,28 +174,6 @@ namespace SkinModHelper.Module
                 Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((FancyText.Portrait portrait) => ReplacePortraitPath(portrait));
             }
-        }
-
-        private void PlayerHairHook(ILContext il)
-        {
-            ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/bangs"))) {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing bangs path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate<Func<string, string>>((string bangsPath) => ReplaceBangsPath(bangsPath));
-            }
-        }
-
-        string ReplaceBangsPath(string bangsPath)
-        {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
-            {
-                string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
-                if (GFX.Game.Has(newBangsPath + "00"))
-                {
-                    bangsPath = newBangsPath;
-                }
-            }
-            return bangsPath;
         }
 
         // This one requires double hook - for some reason they implemented a tiny version of the Textbox class that behaves differently
@@ -216,6 +249,10 @@ namespace SkinModHelper.Module
                     skinConfigs.Add(config.SkinId, config);
                     Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
                 }
+            }
+            if (!skinConfigs.ContainsKey(Settings.SelectedSkinMod))
+            {
+                Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
             }
         }
 
