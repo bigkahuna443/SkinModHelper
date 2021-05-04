@@ -250,7 +250,7 @@ namespace SkinModHelper.Module
                     Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
                 }
             }
-            if (!skinConfigs.ContainsKey(Settings.SelectedSkinMod))
+            if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod))
             {
                 Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
             }
