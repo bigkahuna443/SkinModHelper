@@ -7,6 +7,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -21,17 +22,24 @@ namespace SkinModHelper.Module
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
 
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
+        public static Dictionary<int, string> idHashes;
 
         private static ILHook TextboxRunRoutineHook;
-        private static List<string> spritesWithHair = new List<string>() 
-        { 
-            "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
-        };
+        private static Dictionary<PlayerSpriteMode, string> playerSpriteModes;
 
         public SkinModHelperModule()
         {
             Instance = this;
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
+            idHashes = new Dictionary<int, string>();
+            playerSpriteModes = new Dictionary<PlayerSpriteMode, string>()
+            {
+                { PlayerSpriteMode.Madeline, "player"},
+                { PlayerSpriteMode.MadelineNoBackpack, "player_no_backpack" },
+                { PlayerSpriteMode.Badeline, "badeline" },
+                { PlayerSpriteMode.MadelineAsBadeline, "player_badeline" },
+                { PlayerSpriteMode.Playback, "player_playback" }
+            };
         }
 
         public override void Load()
@@ -42,6 +50,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
+            On.Celeste.PlayerSprite.ctor += PlayerSpriteCtorHook;
 
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
@@ -64,10 +73,33 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
 
+            On.Celeste.PlayerSprite.ctor -= PlayerSpriteCtorHook;
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
         }
+
+        public bool IsModeCelestenet(PlayerSpriteMode mode)
+        {
+            return Convert.ToBoolean((int)mode >> 31);
+        }
+
+        public int GetHashFromMode(PlayerSpriteMode mode)
+        {
+            return ((int)mode & ~(1 << 31)) >> 3;
+        }
+
+        public PlayerSpriteMode GetBaseModeFromMode(PlayerSpriteMode mode)
+        {
+            return mode & (PlayerSpriteMode)7;
+        }
+
+        public PlayerSpriteMode BuildMode(int hash, PlayerSpriteMode baseMode, bool celestenet = false)
+        {
+            int c = celestenet ? 1 : 0;
+            return (PlayerSpriteMode)((c << 31) | (hash << 3)) | baseMode;
+        }
+
         private void InitializeSettings()
         {
             foreach (ModContent mod in Everest.Content.Mods)
@@ -88,6 +120,7 @@ namespace SkinModHelper.Module
                         continue;
                     }
                     skinConfigs.Add(config.SkinId, config);
+                    idHashes.Add(config.SkinId.GetHashCode() >> 4, config.SkinId);
                     Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
                 }
             }
@@ -97,22 +130,78 @@ namespace SkinModHelper.Module
             }
         }
 
+        // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
+        public static void UpdateSkin(string skinId)
+        {
+            Settings.SelectedSkinMod = skinId;
+            Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
+            if (player != null)
+            {
+                int hash = 0;
+                if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+                {
+                    hash = idHashes.FirstOrDefault(x => x.Value == Settings.SelectedSkinMod).Key;
+                }
+                PlayerSpriteMode baseMode = player.Sprite.Mode & (PlayerSpriteMode)7;
+                player.ResetSprite((PlayerSpriteMode)(hash << 3) | baseMode);
+            }
+        }
+
+        private void PlayerSpriteCtorHook(On.Celeste.PlayerSprite.orig_ctor orig, PlayerSprite self, PlayerSpriteMode mode)
+        {
+            bool celestenet = IsModeCelestenet(mode);
+            int hash = GetHashFromMode(mode);
+            PlayerSpriteMode baseMode = GetBaseModeFromMode(mode);
+
+            Console.WriteLine($"BEFORE: celestenet {celestenet}, hash {hash}, baseMode {baseMode}, mode {mode}");
+
+            if (!celestenet && Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN && hash == 0)
+            {
+                hash = idHashes.FirstOrDefault(x => x.Value == Settings.SelectedSkinMod).Key;
+                mode = BuildMode(hash, baseMode);
+            }
+
+            orig(self, mode);
+
+            if (idHashes.ContainsKey(hash))
+            {
+                string skinId = idHashes[hash];
+                Console.WriteLine($"MIDDLE: celestenet {celestenet}, hash {hash}, baseMode {baseMode}, mode {mode}");
+
+                string baseId = playerSpriteModes[baseMode];
+                string spriteName = baseId + "_" + skinId;
+                DynData<PlayerSprite> playerSpriteData = new DynData<PlayerSprite>(self);
+                playerSpriteData["spriteName"] = spriteName;
+                playerSpriteData["Mode"] = mode;
+                GFX.SpriteBank.CreateOn(self, spriteName);
+            }
+            Console.WriteLine($"AFTER: celestenet {celestenet}, hash {hash}, baseMode {baseMode}, mode {mode}");
+        }
+
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            DynData<PlayerSprite> playerSpriteData = new DynData<PlayerSprite>(self.Sprite);
+            string spriteName = playerSpriteData.Get<string>("spriteName");
+            PlayerSpriteMode mode = GetBaseModeFromMode(playerSpriteData.Get<PlayerSpriteMode>("Mode"));
+            int hash = GetHashFromMode(mode);
+
+            if (idHashes.ContainsKey(hash) && !playerSpriteModes.Values.Contains(spriteName))
             {
                 if (index == 0)
                 {
-                    string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
+                    string newBangsPath = skinConfigs[idHashes[hash]].GetUniquePath() + "characters/player/bangs";
                     if (GFX.Game.Has(newBangsPath + "00"))
                     {
                         return GFX.Game.GetAtlasSubtextures(newBangsPath)[self.Sprite.HairFrame];
                     }
                 }
-                string newHairPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/hair00";
-                if (GFX.Game.Has(newHairPath))
+                else
                 {
-                    return GFX.Game[newHairPath];
+                    string newHairPath = skinConfigs[idHashes[hash]].GetUniquePath() + "characters/player/hair00";
+                    if (GFX.Game.Has(newHairPath))
+                    {
+                        return GFX.Game[newHairPath];
+                    }
                 }
             }
             return orig(self, index);
@@ -121,7 +210,26 @@ namespace SkinModHelper.Module
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
         private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id)
         {
-            String newId = id + "_" + Settings.SelectedSkinMod;
+            if (sprite is PlayerSprite)
+            {
+                if (id == "")
+                {
+                    return null;
+                }
+                else if (self.SpriteData.ContainsKey(id))
+                {
+                    Console.WriteLine($"CreateOn: {id}");
+                    return orig(self, sprite, id);
+                }
+                else
+                {
+                    Regex r = new Regex(@"^(\w+)_[A-Za-z0-9]+_[A-Za-z0-9]+$");
+                    string baseId = r.Match(id).Groups[1].Value;
+                    Console.WriteLine($"CreateOn: {baseId}");
+                    return orig(self, sprite, baseId);
+                }
+            }
+            string newId = id + "_" + Settings.SelectedSkinMod;
             if (self.SpriteData.ContainsKey(newId))
             {
                 id = newId;
@@ -227,17 +335,6 @@ namespace SkinModHelper.Module
             return YamlHelper.Deserializer.Deserialize<SkinModHelperConfig>(new StreamReader(skinConfigYaml.Stream));
         }
 
-        // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
-        public static void UpdateSkin(string skinId)
-        {
-            Settings.SelectedSkinMod = skinId;
-            Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
-            if (player != null)
-            {
-                player.ResetSprite(player.Sprite.Mode);
-            }
-        }
-
         // Combine skin mod XML with a vanilla sprite bank
         private void CombineSpriteBanks(SpriteBank origBank, string skinId, string xmlPath)
         {
@@ -261,7 +358,7 @@ namespace SkinModHelper.Module
                     origBank.SpriteData[newSpriteId] = newSpriteData;
 
                     // Build hair!
-                    if (spritesWithHair.Contains(spriteId))
+                    if (playerSpriteModes.Values.Contains(spriteId))
                     {
                         PlayerSprite.CreateFramesMetadata(newSpriteId);
                     }
