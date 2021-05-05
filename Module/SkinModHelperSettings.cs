@@ -11,7 +11,7 @@ namespace SkinModHelper.Module
         {
             var skinSelectMenu = new TextMenu.Option<string>(Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD"));
 
-            skinSelectMenu.Add(Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DEFAULT"), "default_skin", true);
+            skinSelectMenu.Add(Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DEFAULT"), SkinModHelperConfig.DEFAULT_SKIN, true);
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {

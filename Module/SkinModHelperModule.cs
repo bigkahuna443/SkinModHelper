@@ -42,44 +42,12 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
-            //On.Celeste.CompleteRenderer.ctor_XmlElement_Atlas_float_Action += CompleteRendererHook;
 
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
-        }
-
-        private void CompleteRendererHook(On.Celeste.CompleteRenderer.orig_ctor_XmlElement_Atlas_float_Action orig, CompleteRenderer self, XmlElement xml, Atlas atlas, float delay, Action onDoneSlide)
-        {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
-            {
-                XmlDocument newEndscreenXml = Calc.LoadContentXML("Graphics/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "CompleteScreens.xml");
-                if (newEndscreenXml.HasChildNodes && newEndscreenXml["Screens"].HasChild(xml.Name))
-                {
-                    XmlElement newXml = newEndscreenXml["Screens"][xml.Name];
-                    string endscreenPath = "Graphics/" + "Atlases/" + newXml.Attr("atlas");
-                    Atlas newAtlas = new Atlas();
-                    newAtlas.RelativeDataPath = endscreenPath;
-                    foreach (XmlElement layer in newEndscreenXml["Screens"][xml.Name]["layers"])
-                    {
-                        if (layer.Name == "layer")
-                        {
-                            if (Everest.Content.Map.TryGetValue(endscreenPath + "/" + layer.Attr("img"), out ModAsset asset))
-                            {
-                                newAtlas.Ingest(asset);
-                            }
-                        }
-                    }
-                    Console.WriteLine(newAtlas.RelativeDataPath);
-                    orig(self, newXml, newAtlas, delay, onDoneSlide);
-                }
-            }
-            else
-            {
-                orig(self, xml, atlas, delay, onDoneSlide);
-            }
         }
 
         public override void LoadContent(bool firstLoad)
@@ -95,11 +63,38 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
-            //On.Celeste.CompleteRenderer.ctor_XmlElement_Atlas_float_Action -= CompleteRendererHook;
 
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
+        }
+        private void InitializeSettings()
+        {
+            foreach (ModContent mod in Everest.Content.Mods)
+            {
+                SkinModHelperConfig config = null;
+                if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
+                {
+                    config = LoadConfigFile(configAsset);
+                    Regex r = new Regex(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
+                    if (string.IsNullOrEmpty(config.SkinId) || !r.IsMatch(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
+                    {
+                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(config.SkinDialogKey))
+                    {
+                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Missing or invalid dialog key {config.SkinDialogKey}, will not register.");
+                        continue;
+                    }
+                    skinConfigs.Add(config.SkinId, config);
+                    Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
+                }
+            }
+            if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod))
+            {
+                Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
+            }
         }
 
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
@@ -225,35 +220,6 @@ namespace SkinModHelper.Module
                 }
             }
             return textboxPath;
-        }
-
-        private void InitializeSettings()
-        {
-            foreach (ModContent mod in Everest.Content.Mods)
-            {
-                SkinModHelperConfig config = null;
-                if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
-                {
-                    config = LoadConfigFile(configAsset);
-                    Regex r = new Regex(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
-                    if (string.IsNullOrEmpty(config.SkinId) || !r.IsMatch(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
-                    {
-                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
-                        continue;
-                    }
-                    if (string.IsNullOrEmpty(config.SkinDialogKey))
-                    {
-                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Missing or invalid dialog key {config.SkinDialogKey}, will not register.");
-                        continue;
-                    }
-                    skinConfigs.Add(config.SkinId, config);
-                    Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
-                }
-            }
-            if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod))
-            {
-                Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
-            }
         }
 
         private static SkinModHelperConfig LoadConfigFile(ModAsset skinConfigYaml)
