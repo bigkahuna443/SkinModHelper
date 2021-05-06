@@ -79,22 +79,22 @@ namespace SkinModHelper.Module
             TextboxRunRoutineHook.Dispose();
         }
 
-        public bool IsModeCelestenet(PlayerSpriteMode mode)
+        public static bool IsModeCelestenet(PlayerSpriteMode mode)
         {
             return Convert.ToBoolean((int)mode >> 31);
         }
 
-        public int GetHashFromMode(PlayerSpriteMode mode)
+        public static int GetHashFromMode(PlayerSpriteMode mode)
         {
             return ((int)mode & ~(1 << 31)) >> 3;
         }
 
-        public PlayerSpriteMode GetBaseModeFromMode(PlayerSpriteMode mode)
+        public static PlayerSpriteMode GetBaseModeFromMode(PlayerSpriteMode mode)
         {
             return mode & (PlayerSpriteMode)7;
         }
 
-        public PlayerSpriteMode BuildMode(int hash, PlayerSpriteMode baseMode, bool celestenet = false)
+        public static PlayerSpriteMode BuildMode(int hash, PlayerSpriteMode baseMode, bool celestenet = false)
         {
             int c = celestenet ? 1 : 0;
             return (PlayerSpriteMode)((c << 31) | (hash << 3)) | baseMode;
@@ -143,7 +143,14 @@ namespace SkinModHelper.Module
                     hash = idHashes.FirstOrDefault(x => x.Value == Settings.SelectedSkinMod).Key;
                 }
                 PlayerSpriteMode baseMode = player.Sprite.Mode & (PlayerSpriteMode)7;
-                player.ResetSprite((PlayerSpriteMode)(hash << 3) | baseMode);
+                if (player.Active)
+                {
+                    player.ResetSpriteNextFrame(BuildMode(hash, baseMode));
+                }
+                else
+                {
+                    player.ResetSprite(BuildMode(hash, baseMode));
+                }
             }
         }
 
@@ -163,17 +170,22 @@ namespace SkinModHelper.Module
 
             orig(self, mode);
 
-            if (idHashes.ContainsKey(hash))
+            if (!playerSpriteModes.ContainsKey(mode)) 
             {
-                string skinId = idHashes[hash];
-                Console.WriteLine($"MIDDLE: celestenet {celestenet}, hash {hash}, baseMode {baseMode}, mode {mode}");
-
+                string spriteId;
                 string baseId = playerSpriteModes[baseMode];
-                string spriteName = baseId + "_" + skinId;
+
+                if (idHashes.ContainsKey(hash))
+                {
+                    spriteId = baseId + "_" + idHashes[hash];
+                }
+                else
+                {
+                    spriteId = baseId;
+                }
                 DynData<PlayerSprite> playerSpriteData = new DynData<PlayerSprite>(self);
-                playerSpriteData["spriteName"] = spriteName;
-                playerSpriteData["Mode"] = mode;
-                GFX.SpriteBank.CreateOn(self, spriteName);
+                playerSpriteData["spriteName"] = spriteId;
+                GFX.SpriteBank.CreateOn(self, spriteId);
             }
             Console.WriteLine($"AFTER: celestenet {celestenet}, hash {hash}, baseMode {baseMode}, mode {mode}");
         }
@@ -181,15 +193,26 @@ namespace SkinModHelper.Module
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
         {
             DynData<PlayerSprite> playerSpriteData = new DynData<PlayerSprite>(self.Sprite);
-            string spriteName = playerSpriteData.Get<string>("spriteName");
-            PlayerSpriteMode mode = GetBaseModeFromMode(playerSpriteData.Get<PlayerSpriteMode>("Mode"));
+            PlayerSpriteMode mode = playerSpriteData.Get<PlayerSpriteMode>("Mode");
             int hash = GetHashFromMode(mode);
+            PlayerSpriteMode baseMode = GetBaseModeFromMode(mode);
+            string spriteName = playerSpriteData.Get<string>("spriteName");
 
-            if (idHashes.ContainsKey(hash) && !playerSpriteModes.Values.Contains(spriteName))
+            if (idHashes.ContainsKey(hash) && GFX.SpriteBank.SpriteData.ContainsKey(spriteName))
             {
+                string basePath = skinConfigs[idHashes[hash]].GetUniquePath();
                 if (index == 0)
                 {
-                    string newBangsPath = skinConfigs[idHashes[hash]].GetUniquePath() + "characters/player/bangs";
+                    string newBangsPath = "";
+                    if (baseMode != PlayerSpriteMode.Madeline)
+                    {
+                        newBangsPath = basePath + playerSpriteModes[baseMode] + "/bangs";
+                        if (GFX.Game.Has(newBangsPath + "00"))
+                        {
+                            return GFX.Game.GetAtlasSubtextures(newBangsPath)[self.Sprite.HairFrame];
+                        }
+                    }
+                    newBangsPath = basePath + "characters/player/bangs";
                     if (GFX.Game.Has(newBangsPath + "00"))
                     {
                         return GFX.Game.GetAtlasSubtextures(newBangsPath)[self.Sprite.HairFrame];
@@ -197,7 +220,16 @@ namespace SkinModHelper.Module
                 }
                 else
                 {
-                    string newHairPath = skinConfigs[idHashes[hash]].GetUniquePath() + "characters/player/hair00";
+                    string newHairPath = "";
+                    if (baseMode != PlayerSpriteMode.Madeline)
+                    {
+                        newHairPath = basePath + playerSpriteModes[baseMode] + "/hair00";
+                        if (GFX.Game.Has(newHairPath))
+                        {
+                            return GFX.Game[newHairPath];
+                        }
+                    }
+                    newHairPath = basePath + "characters/player/hair00";
                     if (GFX.Game.Has(newHairPath))
                     {
                         return GFX.Game[newHairPath];
