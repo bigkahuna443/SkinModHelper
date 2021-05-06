@@ -16,7 +16,7 @@ namespace SkinModHelper
 
         public SkinModSwapTrigger(EntityData data, Vector2 offset) : base(data, offset)
         {
-            skinId = data.Attr("skinId", "default_skin");
+            skinId = data.Attr("skinId", SkinModHelperConfig.DEFAULT_SKIN);
             revertOnLeave = data.Bool("revertOnLeave", false);
         }
 

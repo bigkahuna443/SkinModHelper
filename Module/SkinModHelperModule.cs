@@ -91,7 +91,15 @@ namespace SkinModHelper.Module
 
         public static PlayerSpriteMode GetBaseModeFromMode(PlayerSpriteMode mode)
         {
-            return mode & (PlayerSpriteMode)7;
+            PlayerSpriteMode baseMode = mode & (PlayerSpriteMode)7;
+            if (baseMode >= PlayerSpriteMode.Madeline && baseMode <= PlayerSpriteMode.Playback)
+            {
+                return baseMode;
+            }
+            else
+            {
+                return PlayerSpriteMode.Madeline;
+            }
         }
 
         public static PlayerSpriteMode BuildMode(int hash, PlayerSpriteMode baseMode, bool celestenet = false)
