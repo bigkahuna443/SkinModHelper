@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
@@ -42,6 +43,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
+            On.Celeste.Player.Render += PlayerRenderHook;
 
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
@@ -63,6 +65,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
+            On.Celeste.Player.Render -= PlayerRenderHook;
 
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
@@ -95,6 +98,33 @@ namespace SkinModHelper.Module
             {
                 Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
             }
+        }
+
+        private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                int dashCount = self.Dashes;
+                string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
+
+                while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount))
+                {
+                    dashCount--;
+                }
+                if (GFX.ColorGrades.Has(colorGradePath + dashCount))
+                {
+                    Effect fxColorGrading = GFX.FxColorGrading;
+                    fxColorGrading.CurrentTechnique = fxColorGrading.Techniques["ColorGradeSingle"];
+                    Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGradePath + dashCount].Texture.Texture_Safe;
+                    Draw.SpriteBatch.End();
+                    Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, fxColorGrading, (self.Scene as Level).GameplayRenderer.Camera.Matrix);
+                    orig(self);
+                    Draw.SpriteBatch.End();
+                    Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (self.Scene as Level).GameplayRenderer.Camera.Matrix);
+                    return;
+                }
+            }
+            orig(self);
         }
 
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
@@ -234,7 +264,14 @@ namespace SkinModHelper.Module
             Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
             if (player != null)
             {
-                player.ResetSprite(player.Sprite.Mode);
+                if (player.Active)
+                {
+                    player.ResetSpriteNextFrame(player.Sprite.Mode);
+                }
+                else
+                {
+                    player.ResetSprite(player.Sprite.Mode);
+                }
             }
         }
 

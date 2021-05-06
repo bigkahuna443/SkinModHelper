@@ -43,8 +43,16 @@ You should follow these steps to set up your XMLs:
     each animation under "Metadata". You can remove hair for a certain frame by putting "|x|" for
     that frame, or remove hair entirely for that animation by removing the whole line.
 
+    
+Part 3: Miscellaneous
+---------------------
+1. You can add color grades that render over your sprite for different dash values by placing them
+in "Graphics/ColorGrades/[your unique path]" and name the images "dashX.png", where X is the number
+of dashes the color grade should apply to. For example, if I had a 0-dash color grade, I would name
+the file "Graphics/ColorGrades/Bigkahuna/MySkin/dash0.png".
 
-Part 3: Troubleshooting
+
+Part 4: Troubleshooting
 -----------------------
 If your skin is not appearing in the menu:
 * Make sure your configuration file is named correctly and in the right place
