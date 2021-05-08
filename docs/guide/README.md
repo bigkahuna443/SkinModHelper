@@ -47,9 +47,12 @@ You should follow these steps to set up your XMLs:
 Part 3: Miscellaneous
 ---------------------
 1. You can add color grades that render over your sprite for different dash values by placing them
-in "Graphics/ColorGrades/[your unique path]" and name the images "dashX.png", where X is the number
+in "Graphics/ColorGrading/[your unique path]" and name the images "dashX.png", where X is the number
 of dashes the color grade should apply to. For example, if I had a 0-dash color grade, I would name
-the file "Graphics/ColorGrades/Bigkahuna/MySkin/dash0.png".
+the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
+   * You can grab the base color grade from "Celeste/Content/Graphics/ColorGrading/none.png"
+   * Pick the color you want to replace on the sprite, find that color on the color grade, and then
+   replace it with the color you want for that dash count.
 
 
 Part 4: Troubleshooting
