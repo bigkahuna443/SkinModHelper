@@ -13,7 +13,7 @@ Installation Guide
 Currently known compatible skin mods include:
 1. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
 2. [Theo](https://gamebanana.com/mods/251813) by Guizs
-3. [clover madeline[(https://gamebanana.com/mods/284804) by crowberry
+3. [clover madeline](https://gamebanana.com/mods/284804) by crowberry
 
 
 Features
