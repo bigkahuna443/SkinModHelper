@@ -24,7 +24,7 @@ namespace SkinModHelper.Module
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
 
         private static ILHook TextboxRunRoutineHook;
-        private static List<string> spritesWithHair = new List<string>() 
+        private static readonly List<string> spritesWithHair = new List<string>() 
         { 
             "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
         };
@@ -75,7 +75,7 @@ namespace SkinModHelper.Module
         {
             foreach (ModContent mod in Everest.Content.Mods)
             {
-                SkinModHelperConfig config = null;
+                SkinModHelperConfig config;
                 if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
                 {
                     config = LoadConfigFile(configAsset);
