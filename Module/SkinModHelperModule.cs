@@ -8,10 +8,8 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Xml;
 
 namespace SkinModHelper.Module
 {
@@ -205,7 +203,7 @@ namespace SkinModHelper.Module
         private void CampfireQuestionHook(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            // Move to the last occurence of this
+            // Move to the last occurrence of this
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>())) { }
             // Make sure nothing went wrong
             if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
@@ -323,7 +321,8 @@ namespace SkinModHelper.Module
         private void PatchSprite(Sprite origSprite, Sprite newSprite)
         {
             Dictionary<string, Sprite.Animation> newAnims = newSprite.GetAnimations();
-            foreach (KeyValuePair<string, Sprite.Animation> animEntry in origSprite.GetAnimations())
+            Dictionary<string, Sprite.Animation> oldAnims = origSprite.GetAnimations();
+            foreach (KeyValuePair<string, Sprite.Animation> animEntry in oldAnims)
             {
                 string origAnimId = animEntry.Key;
                 Sprite.Animation origAnim = animEntry.Value;
