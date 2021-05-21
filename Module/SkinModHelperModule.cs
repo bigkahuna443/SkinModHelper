@@ -1,6 +1,7 @@
 ﻿using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework.Graphics;
+using Mono.Cecil;
 using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
@@ -190,14 +191,13 @@ namespace SkinModHelper.Module
         private void SwapTextboxHook(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
-            {
-                break;
-            }
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
+            // Move to the last occurence of this
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>())) { }
+            // Make sure nothing went wrong
+            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
             {
                 Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((FancyText.Portrait portrait) => ReplacePortraitPath(portrait));
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>(ReplacePortraitPath);
             }
         }
 
@@ -205,26 +205,24 @@ namespace SkinModHelper.Module
         private void CampfireQuestionHook(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
-            {
-                break;
-            }
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
+            // Move to the last occurence of this
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>())) { }
+            // Make sure nothing went wrong
+            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
             {
                 Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((FancyText.Portrait portrait) => ReplacePortraitPath(portrait));
-                break;
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>(ReplacePortraitPath);
             }
-            // This one was a bit cursed, had to go two instructions back to get to it
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("_ask")))
+
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("_ask"), 
+                instr => instr.MatchCall(out MethodReference method) && method.Name == "Concat"))
             {
                 Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing textbox path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.GotoNext().GotoNext().
-                    EmitDelegate<Func<string, string>>((string textboxPath) => ReplaceTextboxPath(textboxPath));
+                cursor.EmitDelegate<Func<string, string>>(ReplaceTextboxPath);
             }
         }
 
-        FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
+        private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
         {
             if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
@@ -238,7 +236,7 @@ namespace SkinModHelper.Module
         }
 
         // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
-        string ReplaceTextboxPath(string textboxPath)
+        private static string ReplaceTextboxPath(string textboxPath)
         {
             if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
@@ -254,7 +252,7 @@ namespace SkinModHelper.Module
 
         private static SkinModHelperConfig LoadConfigFile(ModAsset skinConfigYaml)
         {
-            return YamlHelper.Deserializer.Deserialize<SkinModHelperConfig>(new StreamReader(skinConfigYaml.Stream));
+            return skinConfigYaml.Deserialize<SkinModHelperConfig>();
         }
 
         // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
