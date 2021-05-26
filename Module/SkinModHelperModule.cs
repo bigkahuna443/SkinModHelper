@@ -43,9 +43,12 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render += PlayerRenderHook;
-
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
+
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
+            IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
+            IL.Celeste.DeathEffect.Draw += DeathEffectDrawHook;
+            IL.Celeste.FlyFeather.ctor_Vector2_bool_bool += FlyFeatherHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
@@ -65,8 +68,11 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render -= PlayerRenderHook;
-
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
+
+            IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool -= DreamBlockHook;
+            IL.Celeste.DeathEffect.Draw -= DeathEffectDrawHook;
+            IL.Celeste.FlyFeather.ctor_Vector2_bool_bool -= FlyFeatherHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
         }
@@ -97,6 +103,8 @@ namespace SkinModHelper.Module
             {
                 Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
             }
+
+            UpdateParticleTypes();
         }
 
         private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
@@ -135,7 +143,15 @@ namespace SkinModHelper.Module
                     string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
                     if (GFX.Game.Has(newBangsPath + "00"))
                     {
-                        return GFX.Game.GetAtlasSubtextures(newBangsPath)[self.Sprite.HairFrame];
+                        List<MTexture> bangsTextures = GFX.Game.GetAtlasSubtextures(newBangsPath);
+                        if (bangsTextures.Count > self.Sprite.HairFrame)
+                        {
+                            return bangsTextures[self.Sprite.HairFrame];
+                        }
+                        else
+                        {
+                            return bangsTextures[0];
+                        }
                     }
                 }
                 string newHairPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/hair00";
@@ -184,6 +200,73 @@ namespace SkinModHelper.Module
                 CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
             }
             orig(self);
+        }
+
+        private void DreamBlockHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/dreamblock/particles")))
+            {
+                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                cursor.EmitDelegate<Func<string, string>>(ReplaceDreamBlockParticle);
+            }
+        }
+
+        private static string ReplaceDreamBlockParticle(string dreamBlockParticle)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                string newDreamBlockParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/dreamblock/particles";
+                if (GFX.Game.Has(newDreamBlockParticle))
+                {
+                    return newDreamBlockParticle;
+                }
+            }
+            return dreamBlockParticle;
+        }
+
+        private void DeathEffectDrawHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/hair00"))) {
+                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                cursor.EmitDelegate<Func<string, string>>(ReplaceDeathParticle);
+            }
+        }
+
+        private static string ReplaceDeathParticle(string deathParticle)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                string newDeathParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/death_particle";
+                if (GFX.Game.Has(newDeathParticle))
+                {
+                    return newDeathParticle;
+                }
+            }
+            return deathParticle;
+        }
+
+        private void FlyFeatherHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/flyFeather/outline")))
+            {
+                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing feather outline path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                cursor.EmitDelegate<Func<string, string>>(ReplaceFeatherOutline);
+            }
+        }
+        private static string ReplaceFeatherOutline(string featherOutline)
+        {
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                string newFeatherOutline = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/flyFeather/outline";
+                if (GFX.Game.Has(newFeatherOutline))
+                {
+                    return newFeatherOutline;
+                }
+            }
+            return featherOutline;
         }
 
         private void SwapTextboxHook(ILContext il)
@@ -257,6 +340,9 @@ namespace SkinModHelper.Module
         public static void UpdateSkin(string skinId)
         {
             Settings.SelectedSkinMod = skinId;
+
+            UpdateParticleTypes();
+
             Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
             if (player != null)
             {
@@ -267,6 +353,22 @@ namespace SkinModHelper.Module
                 else
                 {
                     player.ResetSprite(player.Sprite.Mode);
+                }
+            }
+        }
+
+        private static void UpdateParticleTypes()
+        {
+            FlyFeather.P_Collect.Source = GFX.Game["particles/feather"];
+            FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
+
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
+                string featherParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "particles/feather";
+                if (GFX.Game.Has(featherParticle))
+                {
+                    FlyFeather.P_Collect.Source = GFX.Game[featherParticle];
+                    FlyFeather.P_Boost.Source = GFX.Game[featherParticle];
                 }
             }
         }

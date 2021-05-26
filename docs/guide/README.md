@@ -53,7 +53,15 @@ the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
    * You can grab the base color grade from "Celeste/Content/Graphics/ColorGrading/none.png"
    * Pick the color you want to replace on the sprite, find that color on the color grade, and then
    replace it with the color you want for that dash count.
-
+2. You can add a custom death particle (the circles that appear around Madeline when she dies) by
+creating a small image named death_particle.png and place it in your player sprite folder. Use white
+as the only color -- it will be filled in by your current hair color on death.
+   * For reference, the vanilla death particle is an 8x8 white circle (hair00.png).
+3. A few extra things that can be reskinned:
+   * The particles for feathers: "../Gameplay/[your unique path]/particles/feather.png"
+   * The particles for dream blocks: "../Gameplay/[your unique path]/objects/dreamblock/particles.png"
+      * Use the vanilla image as a guide -- you need to space out the three particle sizes in a
+      specific way for them to be used correctly.
 
 Part 4: Troubleshooting
 -----------------------
