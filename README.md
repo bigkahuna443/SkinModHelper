@@ -14,6 +14,7 @@ Currently known compatible skin mods include:
 1. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
 2. [Theo](https://gamebanana.com/mods/251813) by Guizs
 3. [clover madeline](https://gamebanana.com/mods/284804) by crowberry
+4. [Dadbod](https://gamebanana.com/mods/289649) by Nikko
 
 
 Features
@@ -52,7 +53,8 @@ Credits
 
 **Creator**: Bigkahuna
 
-**Coding Support**:
+**Code Contributors**:
+* coloursofnoise
 * max480
 * Viv
 
