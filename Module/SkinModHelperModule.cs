@@ -43,6 +43,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render += PlayerRenderHook;
+            On.Celeste.PlayerDeadBody.Render += PlayerDeadBodyRenderHook;
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
 
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
@@ -68,6 +69,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render -= PlayerRenderHook;
+            On.Celeste.PlayerDeadBody.Render -= PlayerDeadBodyRenderHook;
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
 
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool -= DreamBlockHook;
@@ -103,7 +105,6 @@ namespace SkinModHelper.Module
             {
                 Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
             }
-
             UpdateParticleTypes();
         }
 
@@ -112,6 +113,34 @@ namespace SkinModHelper.Module
             if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
             {
                 int dashCount = self.Dashes;
+                string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
+
+                while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount))
+                {
+                    dashCount--;
+                }
+                if (GFX.ColorGrades.Has(colorGradePath + dashCount))
+                {
+                    Effect fxColorGrading = GFX.FxColorGrading;
+                    fxColorGrading.CurrentTechnique = fxColorGrading.Techniques["ColorGradeSingle"];
+                    Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGradePath + dashCount].Texture.Texture_Safe;
+                    Draw.SpriteBatch.End();
+                    Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, fxColorGrading, (self.Scene as Level).GameplayRenderer.Camera.Matrix);
+                    orig(self);
+                    Draw.SpriteBatch.End();
+                    Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (self.Scene as Level).GameplayRenderer.Camera.Matrix);
+                    return;
+                }
+            }
+            orig(self);
+        }
+
+        private void PlayerDeadBodyRenderHook(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self)
+        {
+            DynData<PlayerDeadBody> deadBody = new DynData<PlayerDeadBody>(self);
+            int dashCount = deadBody.Get<Player>("player").Dashes;
+            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            {
                 string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
 
                 while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount))
