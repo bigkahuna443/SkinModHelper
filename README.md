@@ -10,13 +10,6 @@ Installation Guide
 2. Install [Skin Mod Helper](https://gamebanana.com/mods/166543) from GameBanana.
 3. Install any compatible skin mod from GameBanana.
 
-Currently known compatible skin mods include:
-1. [Niko (OneShot)](https://gamebanana.com/skins/180365) by Zaro
-2. [Theo](https://gamebanana.com/mods/251813) by Guizs
-3. [clover madeline](https://gamebanana.com/mods/284804) by crowberry
-4. [Dadbod](https://gamebanana.com/mods/289649) by Nikko
-
-
 Features
 ------------
 **For Players**:
@@ -28,7 +21,7 @@ You can do this from the main menu or from in-game.
 
 **For Mappers**:
 
-Use the SkinModSwapTrigger to change the player's skin to any loaded skin mod!
+Use the Skin Swap Trigger to change the player's skin to any loaded skin mod! Usable in Ahorn or Lönn.
  
  
 **For Skin Modders**:
@@ -37,6 +30,8 @@ Currently reskinnable objects include:
 1. Player, Other Self, and other sprites defined in Sprites.xml
 2. Portraits
 3. Textboxes
+4. Particles (death, dream block, feather)
+5. More by request!
 
 Setting up your skin mod correctly requires some configuration. 
 See the [guide](docs/guide/README.md) for more information.
