@@ -10,15 +10,19 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using FMOD.Studio;
 
 namespace SkinModHelper.Module
 {
     public class SkinModHelperModule : EverestModule
     {
         public static SkinModHelperModule Instance;
+        public static readonly string DEFAULT = "Default";
 
         public override Type SettingsType => typeof(SkinModHelperSettings);
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
+
+        public static SkinModHelperUI UI;
 
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
 
@@ -31,6 +35,7 @@ namespace SkinModHelper.Module
         public SkinModHelperModule()
         {
             Instance = this;
+            UI = new SkinModHelperUI();
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
         }
 
@@ -78,6 +83,13 @@ namespace SkinModHelper.Module
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
         }
+
+        public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
+        {
+            base.CreateModMenuSection(menu, inGame, snapshot);
+            UI.CreateMenu(menu, inGame);
+        }
+
         private void InitializeSettings()
         {
             foreach (ModContent mod in Everest.Content.Mods)
@@ -103,14 +115,14 @@ namespace SkinModHelper.Module
             }
             if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod))
             {
-                Settings.SelectedSkinMod = SkinModHelperConfig.DEFAULT_SKIN;
+                Settings.SelectedSkinMod = DEFAULT;
             }
             UpdateParticleTypes();
         }
 
         private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 int dashCount = self.Dashes;
                 string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
@@ -139,7 +151,7 @@ namespace SkinModHelper.Module
         {
             DynData<PlayerDeadBody> deadBody = new DynData<PlayerDeadBody>(self);
             int dashCount = deadBody.Get<Player>("player").Dashes;
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
 
@@ -165,7 +177,7 @@ namespace SkinModHelper.Module
 
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 if (index == 0)
                 {
@@ -219,7 +231,7 @@ namespace SkinModHelper.Module
             foreach (KeyValuePair<string, SkinModHelperConfig> config in skinConfigs)
             {
                 string skinId = config.Key;
-                if (skinId == SkinModHelperConfig.DEFAULT_SKIN)
+                if (skinId == DEFAULT)
                 {
                     continue;
                 }
@@ -243,7 +255,7 @@ namespace SkinModHelper.Module
 
         private static string ReplaceDreamBlockParticle(string dreamBlockParticle)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string newDreamBlockParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/dreamblock/particles";
                 if (GFX.Game.Has(newDreamBlockParticle))
@@ -265,7 +277,7 @@ namespace SkinModHelper.Module
 
         private static string ReplaceDeathParticle(string deathParticle)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string newDeathParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/death_particle";
                 if (GFX.Game.Has(newDeathParticle))
@@ -287,7 +299,7 @@ namespace SkinModHelper.Module
         }
         private static string ReplaceFeatherOutline(string featherOutline)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string newFeatherOutline = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/flyFeather/outline";
                 if (GFX.Game.Has(newFeatherOutline))
@@ -334,7 +346,7 @@ namespace SkinModHelper.Module
 
         private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string skinModPortraitSpriteId = portrait.SpriteId + "_" + Settings.SelectedSkinMod;
                 if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId))
@@ -348,7 +360,7 @@ namespace SkinModHelper.Module
         // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
         private static string ReplaceTextboxPath(string textboxPath)
         {
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
                 string newTextboxPath = "textbox/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + originalPortraitId + "_ask";
@@ -365,33 +377,12 @@ namespace SkinModHelper.Module
             return skinConfigYaml.Deserialize<SkinModHelperConfig>();
         }
 
-        // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
-        public static void UpdateSkin(string skinId)
-        {
-            Settings.SelectedSkinMod = skinId;
-
-            UpdateParticleTypes();
-
-            Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
-            if (player != null)
-            {
-                if (player.Active)
-                {
-                    player.ResetSpriteNextFrame(player.Sprite.Mode);
-                }
-                else
-                {
-                    player.ResetSprite(player.Sprite.Mode);
-                }
-            }
-        }
-
         private static void UpdateParticleTypes()
         {
             FlyFeather.P_Collect.Source = GFX.Game["particles/feather"];
             FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
 
-            if (Settings.SelectedSkinMod != SkinModHelperConfig.DEFAULT_SKIN)
+            if (Settings.SelectedSkinMod != DEFAULT)
             {
                 string featherParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "particles/feather";
                 if (GFX.Game.Has(featherParticle))
@@ -452,7 +443,8 @@ namespace SkinModHelper.Module
         private void PatchSprite(Sprite origSprite, Sprite newSprite)
         {
             Dictionary<string, Sprite.Animation> newAnims = newSprite.GetAnimations();
-            Dictionary<string, Sprite.Animation> oldAnims = origSprite.GetAnimations();
+            // Shallow copy... sometimes new animations get added mid-update??
+            Dictionary<string, Sprite.Animation> oldAnims = new Dictionary<string, Sprite.Animation>(origSprite.GetAnimations());
             foreach (KeyValuePair<string, Sprite.Animation> animEntry in oldAnims)
             {
                 string origAnimId = animEntry.Key;
@@ -460,6 +452,26 @@ namespace SkinModHelper.Module
                 if (!newAnims.ContainsKey(origAnimId))
                 {
                     newAnims[origAnimId] = origAnim;
+                }
+            }
+        }
+
+        // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
+        public static void UpdateSkin(string newSkinId)
+        {
+            Settings.SelectedSkinMod = newSkinId;
+            UpdateParticleTypes();
+
+            Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
+            if (player != null)
+            {
+                if (player.Active)
+                {
+                    player.ResetSpriteNextFrame(player.Sprite.Mode);
+                }
+                else
+                {
+                    player.ResetSprite(player.Sprite.Mode);
                 }
             }
         }
