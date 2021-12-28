@@ -31,6 +31,9 @@ You should follow these steps to set up your XMLs:
 2. Take out the sprites and animations you aren't reskinning.
    * These will automatically be replaced vanilla sprites/animations.
    * For Sprites.xml, make sure to remove the "Metadata" section for any animations you remove.
+   * One caveat: the "start" field should be the name of an animation that you are reskinning. 
+     For example, if you're only reskinning the "dash" animation of the player sprite, change the
+     "start" field to "dash".
 3. Change the "path" fields to the correct path for your skin and put the files there.
    * For Sprites.xml, the base folder is "Graphics/Atlases/Gameplay". So for example, for the player
     sprite I would use "path=Bigkahuna/MySkin/characters/player/" and put the images in
@@ -41,7 +44,8 @@ You should follow these steps to set up your XMLs:
    * You can edit the "delay", "frames", and "goto" attributes of animations to change how they work.
    * For Sprites.xml, you can change the bangs for a sprite, by editing the "hair" frames for
     each animation under "Metadata". You can remove hair for a certain frame by putting "|x|" for
-    that frame, or remove hair entirely for that animation by removing the whole line.
+    that frame, or remove hair entirely for that animation by removing the whole line. If you're not
+    using hair at all, you can just remove the Metadata section.
 
     
 Part 3: Miscellaneous
