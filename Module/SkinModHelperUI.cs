@@ -1,6 +1,5 @@
 ﻿using Celeste;
 using Celeste.Mod;
-using System.Collections.Generic;
 
 namespace SkinModHelper.Module
 {
@@ -20,7 +19,9 @@ namespace SkinModHelper.Module
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
                 bool selected = (config.SkinId == SkinModHelperModule.Settings.SelectedSkinMod);
-                skinSelectMenu.Add(Dialog.Clean(config.SkinDialogKey), config.SkinId, selected);
+                string name = Dialog.Clean(config.SkinDialogKey);
+                name = (name == "") ? config.SkinId : name;
+                skinSelectMenu.Add(name, config.SkinId, selected);
             }
 
             // Set our update action on our complete menu

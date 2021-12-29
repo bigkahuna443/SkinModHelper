@@ -12,8 +12,14 @@ This is the file that will let our helper find all of your assets.
 Here are the different fields you can use:
 ```
 SkinId: [unique ID of your skin, required]
-SkinDialogKey: [dialog ID of your skin's name, required]
+SkinDialogKey: [dialog ID of your skin's name, optional, if not included name will default to your SkinId]
+HairColors: [hair colors for your skin, optional, if not included uses vanilla colors]
+- Dashes: 0 [use 0 to 5]
+  Color: "ABCDEF" [use six digit RGB hex code]
 ```
+
+Note that hair color choices may be overridden by other cosmetic mods. This is intentional to allow for
+customization even when using a skin.
 
 Your skin ID should be in the format "[Name]_[Skin]", e.g. "Bigkahuna_MySkin". This will double
 as the file asset path -- "Bigkahuna_MySkin" turns into "Bigkahuna/MySkin". You will use this path
@@ -22,8 +28,8 @@ for all custom assets. I'll refer to this as **[your unique path]**.
 
 Part 2: Create your XMLs
 -------------------------
-This helper uses XMLs to reskin most objects. XMLs should be placed in "Graphics/[your unique path]/",
-e.g. "Graphics/Bigkahuna/MySkin/Sprites.xml".
+This helper uses XMLs to reskin most objects. Right now, Sprites.xml and Portraits.xml are supported.
+XMLs should be placed in "Graphics/[your unique path]/", e.g. "Graphics/Bigkahuna/MySkin/Sprites.xml".
 
 You should follow these steps to set up your XMLs:
 1. Copy the vanilla version of the XML.
@@ -71,11 +77,12 @@ Part 4: Troubleshooting
 -----------------------
 If your skin is not appearing in the menu:
 * Make sure your configuration file is named correctly and in the right place
-* Make sure the ID and dialog keys are present, unique, and correct
+* Make sure the ID is present, unique, and correct
 
 If your sprites/portraits are not appearing in-game:
 * Make sure your XML is valid. You can compare to the vanilla files or use an [online syntax checker](https://www.xmlvalidation.com/)
 * Make sure the "path" fields to your sprites/portraits are correct and the files are in the right place
+* Make sure the "start" field references an animation you have reskinned.
 
 If you get missing textures or unexpected vanilla textures:
 * Check your log to see what textures are missing -- these messages can point you in the right direction
@@ -88,4 +95,4 @@ If you get crashes:
 
 This process can be pretty involved, especially if you are porting over an existing skin mod,
 so feel free to [contact me](../../README.md#contact) if you need help, find an issue, or would
-like a new feature supported! You can also use a [currently supported skin mod](../../README.md#installation-guide) as a reference.
+like a new feature supported! You can also use a currently supported skin mod as a reference.

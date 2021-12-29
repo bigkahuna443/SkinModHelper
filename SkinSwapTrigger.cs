@@ -1,9 +1,8 @@
 ﻿using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
-using SkinModHelper.Module;
 using Microsoft.Xna.Framework;
-using System.Linq;
+using SkinModHelper.Module;
 
 namespace SkinModHelper
 {
@@ -27,7 +26,7 @@ namespace SkinModHelper
             base.OnEnter(player);
             if (skinId != SkinModHelperModule.DEFAULT && !SkinModHelperModule.skinConfigs.ContainsKey(skinId))
             {
-                Logger.Log("SkinModHelper/SkinModSwapTrigger", $"Tried to swap to unknown skin ID {skinId}.");
+                Logger.Log(LogLevel.Warn, "SkinModHelper/SkinModSwapTrigger", $"Tried to swap to unknown skin ID {skinId}.");
                 return;
             }
             oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;

@@ -1,5 +1,7 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using FMOD.Studio;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil;
 using Monocle;
@@ -10,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using FMOD.Studio;
 
 namespace SkinModHelper.Module
 {
@@ -18,6 +19,7 @@ namespace SkinModHelper.Module
     {
         public static SkinModHelperModule Instance;
         public static readonly string DEFAULT = "Default";
+        public static readonly int MAX_DASHES = 5;
 
         public override Type SettingsType => typeof(SkinModHelperSettings);
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
@@ -25,7 +27,6 @@ namespace SkinModHelper.Module
         public static SkinModHelperUI UI;
 
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
-
         private static ILHook TextboxRunRoutineHook;
         private static readonly List<string> spritesWithHair = new List<string>() 
         { 
@@ -41,8 +42,10 @@ namespace SkinModHelper.Module
 
         public override void Load()
         {
-            Logger.SetLogLevel("SkinModHelper/SkinModHelperModule", LogLevel.Warn);
-            Logger.Log("SkinModHelper/SkinModHelperModule", "Initializing SkinModHelper");
+            Logger.SetLogLevel("SkinModHelper", LogLevel.Info);
+            Logger.Log("SkinModHelper", "Initializing SkinModHelper");
+
+            Everest.Content.OnUpdate += EverestContentUpdateHook;
 
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
@@ -58,30 +61,42 @@ namespace SkinModHelper.Module
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
+
+            // Allow other cosmetic mods (e.g. Hyperline) to override certain cosmetic settings like hair color
+            using (new DetourContext() { Before = { "*" } })
+            {
+                On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
+            }
         }
 
         public override void LoadContent(bool firstLoad)
         {
             base.LoadContent(firstLoad);
-            InitializeSettings();
+
+            ReloadSettings();
+            UpdateParticles();
         }
 
         public override void Unload()
         {
-            Logger.Log("SkinModHelper/SkinModHelperModule", "Unloading SkinModHelper");
+            Logger.Log("SkinModHelper", "Unloading SkinModHelper");
+
+            Everest.Content.OnUpdate -= EverestContentUpdateHook;
 
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render -= PlayerRenderHook;
             On.Celeste.PlayerDeadBody.Render -= PlayerDeadBodyRenderHook;
-            On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
 
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool -= DreamBlockHook;
             IL.Celeste.DeathEffect.Draw -= DeathEffectDrawHook;
             IL.Celeste.FlyFeather.ctor_Vector2_bool_bool -= FlyFeatherHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
             TextboxRunRoutineHook.Dispose();
+
+            On.Celeste.Player.UpdateHair -= PlayerUpdateHairHook;
+            On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
         }
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
@@ -90,47 +105,90 @@ namespace SkinModHelper.Module
             UI.CreateMenu(menu, inGame);
         }
 
-        private void InitializeSettings()
+        private void EverestContentUpdateHook(ModAsset oldAsset, ModAsset newAsset)
         {
+            if (newAsset != null && newAsset.PathVirtual.StartsWith("SkinModHelperConfig"))
+            {
+                ReloadSettings();
+            }
+        }
+
+        private void ReloadSettings()
+        {
+            skinConfigs.Clear();
+            Instance.LoadSettings();
+
             foreach (ModContent mod in Everest.Content.Mods)
             {
                 SkinModHelperConfig config;
                 if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
                 {
                     config = LoadConfigFile(configAsset);
-                    Regex r = new Regex(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
-                    if (string.IsNullOrEmpty(config.SkinId) || !r.IsMatch(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
+
+                    Regex skinIdRegex = new Regex(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
+                    if (string.IsNullOrEmpty(config.SkinId) || !skinIdRegex.IsMatch(config.SkinId) || skinConfigs.ContainsKey(config.SkinId))
                     {
-                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
+                        Logger.Log(LogLevel.Warn, "SkinModHelper", $"Duplicate or invalid skin mod ID {config.SkinId}, will not register.");
                         continue;
                     }
-                    if (string.IsNullOrEmpty(config.SkinDialogKey))
+
+                    // Default colors taken from vanilla
+                    config.GeneratedHairColors = new List<Color>(new Color[MAX_DASHES + 1]);
+                    config.GeneratedHairColors[0] = Calc.HexToColor("44B7FF");
+                    config.GeneratedHairColors[1] = Calc.HexToColor("AC3232");
+                    config.GeneratedHairColors[2] = Calc.HexToColor("FF6DEF");
+
+                    List<bool> changed = new List<bool>(new bool[MAX_DASHES + 1]);
+
+                    if (config.HairColors != null)
                     {
-                        Logger.Log("SkinModHelper/SkinModHelperModule", $"Missing or invalid dialog key {config.SkinDialogKey}, will not register.");
-                        continue;
+                        foreach (SkinModHelperConfig.HairColor hairColor in config.HairColors)
+                        {
+                            Regex hairColorRegex = new Regex(@"^[a-fA-F0-9]{6}$");
+                            if (hairColor.Dashes >= 0 && hairColor.Dashes <= MAX_DASHES && hairColorRegex.IsMatch(hairColor.Color))
+                            {
+                                config.GeneratedHairColors[hairColor.Dashes] = Calc.HexToColor(hairColor.Color);
+                                changed[hairColor.Dashes] = true;
+                            }
+                            else
+                            {
+                                Logger.Log(LogLevel.Warn, "SkinModHelper", $"Invalid hair color or dash count values provided for {config.SkinId}.");
+                            }
+                        }
                     }
+
+                    // Fill upper dash range with the last customized dash color
+                    for (int i = 3; i <= MAX_DASHES; i++)
+                    {
+                        if (!changed[i])
+                        {
+                            config.GeneratedHairColors[i] = config.GeneratedHairColors[i - 1];
+                        }
+                    }
+
                     skinConfigs.Add(config.SkinId, config);
-                    Logger.Log("SkinModHelper/SkinModHelperModule", $"Registered new skin mod: {config.SkinId}");
+                    Logger.Log(LogLevel.Info, "SkinModHelper", $"Registered new skin mod: {config.SkinId}");
                 }
             }
             if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod))
             {
                 Settings.SelectedSkinMod = DEFAULT;
             }
-            UpdateParticleTypes();
         }
 
         private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
-                int dashCount = self.Dashes;
+                int dashCount = Math.Min(self.Dashes, MAX_DASHES);
                 string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
 
+                // Default to two-dash color grade if we don't have one for higher dash counts
                 while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount))
                 {
                     dashCount--;
                 }
+
                 if (GFX.ColorGrades.Has(colorGradePath + dashCount))
                 {
                     Effect fxColorGrading = GFX.FxColorGrading;
@@ -177,7 +235,7 @@ namespace SkinModHelper.Module
 
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 if (index == 0)
                 {
@@ -202,6 +260,16 @@ namespace SkinModHelper.Module
                 }
             }
             return orig(self, index);
+        }
+
+        private void PlayerUpdateHairHook(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
+        {
+            orig(self, applyGravity);
+            if (UniqueSkinSelected())
+            {
+                int dashCount = Math.Min(self.Dashes, MAX_DASHES);
+                self.Hair.Color = skinConfigs[Settings.SelectedSkinMod].GeneratedHairColors[dashCount];
+            }
         }
 
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
@@ -248,14 +316,14 @@ namespace SkinModHelper.Module
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/dreamblock/particles")))
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<string, string>>(ReplaceDreamBlockParticle);
             }
         }
 
         private static string ReplaceDreamBlockParticle(string dreamBlockParticle)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string newDreamBlockParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/dreamblock/particles";
                 if (GFX.Game.Has(newDreamBlockParticle))
@@ -270,14 +338,14 @@ namespace SkinModHelper.Module
         {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/hair00"))) {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<string, string>>(ReplaceDeathParticle);
             }
         }
 
         private static string ReplaceDeathParticle(string deathParticle)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string newDeathParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/death_particle";
                 if (GFX.Game.Has(newDeathParticle))
@@ -293,13 +361,13 @@ namespace SkinModHelper.Module
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/flyFeather/outline")))
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing feather outline path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing feather outline path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<string, string>>(ReplaceFeatherOutline);
             }
         }
         private static string ReplaceFeatherOutline(string featherOutline)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string newFeatherOutline = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/flyFeather/outline";
                 if (GFX.Game.Has(newFeatherOutline))
@@ -318,7 +386,7 @@ namespace SkinModHelper.Module
             // Make sure nothing went wrong
             if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>(ReplacePortraitPath);
             }
         }
@@ -332,21 +400,21 @@ namespace SkinModHelper.Module
             // Make sure nothing went wrong
             if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>(ReplacePortraitPath);
             }
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("_ask"), 
                 instr => instr.MatchCall(out MethodReference method) && method.Name == "Concat"))
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Changing textbox path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                Logger.Log("SkinModHelper", $"Changing textbox path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<string, string>>(ReplaceTextboxPath);
             }
         }
 
         private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string skinModPortraitSpriteId = portrait.SpriteId + "_" + Settings.SelectedSkinMod;
                 if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId))
@@ -360,7 +428,7 @@ namespace SkinModHelper.Module
         // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
         private static string ReplaceTextboxPath(string textboxPath)
         {
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
                 string newTextboxPath = "textbox/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + originalPortraitId + "_ask";
@@ -377,7 +445,7 @@ namespace SkinModHelper.Module
             return skinConfigYaml.Deserialize<SkinModHelperConfig>();
         }
 
-        private static void UpdateParticleTypes()
+        private static void UpdateParticles()
         {
             FlyFeather.P_Collect.Source = GFX.Game["particles/feather"];
             FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
@@ -390,6 +458,8 @@ namespace SkinModHelper.Module
                     FlyFeather.P_Collect.Source = GFX.Game[featherParticle];
                     FlyFeather.P_Boost.Source = GFX.Game[featherParticle];
                 }
+
+
             }
         }
 
@@ -429,12 +499,12 @@ namespace SkinModHelper.Module
             try
             {
                 SpriteBank newBank = new SpriteBank(origBank.Atlas, xmlPath);
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Built sprite bank for {xmlPath}.");
+                Logger.Log("SkinModHelper", $"Built sprite bank for {xmlPath}.");
                 return newBank;
             }
             catch (Exception e)
             {
-                Logger.Log("SkinModHelper/SkinModHelperModule", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
+                Logger.Log("SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
                 return null;
             }
         }
@@ -443,7 +513,7 @@ namespace SkinModHelper.Module
         private void PatchSprite(Sprite origSprite, Sprite newSprite)
         {
             Dictionary<string, Sprite.Animation> newAnims = newSprite.GetAnimations();
-            // Shallow copy... sometimes new animations get added mid-update??
+            // Shallow copy... sometimes new animations get added mid-update?
             Dictionary<string, Sprite.Animation> oldAnims = new Dictionary<string, Sprite.Animation>(origSprite.GetAnimations());
             foreach (KeyValuePair<string, Sprite.Animation> animEntry in oldAnims)
             {
@@ -460,7 +530,7 @@ namespace SkinModHelper.Module
         public static void UpdateSkin(string newSkinId)
         {
             Settings.SelectedSkinMod = newSkinId;
-            UpdateParticleTypes();
+            UpdateParticles();
 
             Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
             if (player != null)
@@ -474,6 +544,11 @@ namespace SkinModHelper.Module
                     player.ResetSprite(player.Sprite.Mode);
                 }
             }
+        }
+
+        public static bool UniqueSkinSelected()
+        {
+            return (Settings.SelectedSkinMod != null && Settings.SelectedSkinMod != DEFAULT);
         }
     }
 }
