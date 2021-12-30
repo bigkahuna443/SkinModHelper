@@ -51,6 +51,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
             On.Celeste.Player.Render += PlayerRenderHook;
+            On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
             On.Celeste.PlayerDeadBody.Render += PlayerDeadBodyRenderHook;
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
 
@@ -61,12 +62,6 @@ namespace SkinModHelper.Module
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
-
-            // Allow other cosmetic mods (e.g. Hyperline) to override certain cosmetic settings like hair color
-            using (new DetourContext() { Before = { "*" } })
-            {
-                On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
-            }
         }
 
         public override void LoadContent(bool firstLoad)
