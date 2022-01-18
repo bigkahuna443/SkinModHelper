@@ -204,7 +204,7 @@ namespace SkinModHelper.Module
         {
             DynData<PlayerDeadBody> deadBody = new DynData<PlayerDeadBody>(self);
             int dashCount = deadBody.Get<Player>("player").Dashes;
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
 
@@ -445,7 +445,7 @@ namespace SkinModHelper.Module
             FlyFeather.P_Collect.Source = GFX.Game["particles/feather"];
             FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
 
-            if (Settings.SelectedSkinMod != DEFAULT)
+            if (UniqueSkinSelected())
             {
                 string featherParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "particles/feather";
                 if (GFX.Game.Has(featherParticle))
