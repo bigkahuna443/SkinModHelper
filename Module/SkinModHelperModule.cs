@@ -50,6 +50,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
+            On.Celeste.GameLoader.LoadThread += GameLoaderLoadThreadHook;
             On.Celeste.Player.Render += PlayerRenderHook;
             On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
             On.Celeste.PlayerDeadBody.Render += PlayerDeadBodyRenderHook;
@@ -81,6 +82,7 @@ namespace SkinModHelper.Module
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOnHook;
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
+            On.Celeste.GameLoader.LoadThread -= GameLoaderLoadThreadHook;
             On.Celeste.Player.Render -= PlayerRenderHook;
             On.Celeste.PlayerDeadBody.Render -= PlayerDeadBodyRenderHook;
 
@@ -288,6 +290,22 @@ namespace SkinModHelper.Module
             return orig(self, id);
         }
 
+        // We only need this for file select : )
+        private void GameLoaderLoadThreadHook(On.Celeste.GameLoader.orig_LoadThread orig, GameLoader self)
+        {
+            orig(self);
+            foreach (KeyValuePair<string, SkinModHelperConfig> config in skinConfigs)
+            {
+                string skinId = config.Key;
+                if (skinId == DEFAULT)
+                {
+                    continue;
+                }
+                string portraitsXmlPath = "Graphics/" + config.Value.GetUniquePath() + "Portraits.xml";
+                CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
+            }
+        }
+
         // Wait until the main sprite bank is created, then combine with our skin mod banks
         private void LevelLoaderLoadingThreadHook(On.Celeste.LevelLoader.orig_LoadingThread orig, LevelLoader self)
         {
@@ -430,6 +448,10 @@ namespace SkinModHelper.Module
                 if (GFX.Portraits.Has(newTextboxPath))
                 {
                     textboxPath = newTextboxPath;
+                }
+                else
+                {
+                    textboxPath = "textbox/" + originalPortraitId + "_ask";
                 }
             }
             return textboxPath;
