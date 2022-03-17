@@ -264,7 +264,7 @@ namespace SkinModHelper.Module
             orig(self, applyGravity);
             if (UniqueSkinSelected())
             {
-                int dashCount = Math.Min(self.Dashes, MAX_DASHES);
+                int dashCount = (self.Dashes < 0) ? 0 : Math.Min(self.Dashes, MAX_DASHES);
                 self.Hair.Color = skinConfigs[Settings.SelectedSkinMod].GeneratedHairColors[dashCount];
             }
         }
