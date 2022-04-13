@@ -262,7 +262,7 @@ namespace SkinModHelper.Module
         private void PlayerUpdateHairHook(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
         {
             orig(self, applyGravity);
-            if (UniqueSkinSelected())
+            if (UniqueSkinSelected() && self.StateMachine.State != Player.StStarFly)
             {
                 int dashCount = (self.Dashes < 0) ? 0 : Math.Min(self.Dashes, MAX_DASHES);
                 self.Hair.Color = skinConfigs[Settings.SelectedSkinMod].GeneratedHairColors[dashCount];
