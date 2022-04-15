@@ -60,6 +60,7 @@ namespace SkinModHelper.Module
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
             IL.Celeste.DeathEffect.Draw += DeathEffectDrawHook;
             IL.Celeste.FlyFeather.ctor_Vector2_bool_bool += FlyFeatherHook;
+            IL.Celeste.Player.Render += PlayerRenderIlHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
@@ -378,6 +379,27 @@ namespace SkinModHelper.Module
                 cursor.EmitDelegate<Func<string, string>>(ReplaceFeatherOutline);
             }
         }
+
+        private void PlayerRenderIlHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/startStarFlyWhite")))
+            {
+                Logger.Log("SkinModHelper", $"Changing startStarFlyWhite path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    if (UniqueSkinSelected())
+                    {
+                        string newAnimPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/startStarFlyWhite";
+                        if (GFX.Game.Has(newAnimPath + "00"))
+                        {
+                            return newAnimPath;
+                        }
+                    }
+                    return orig;
+                });
+            }
+        }
+
         private static string ReplaceFeatherOutline(string featherOutline)
         {
             if (UniqueSkinSelected())
