@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using Monocle;
 
 namespace SkinModHelper.Module
 {
@@ -30,6 +31,11 @@ namespace SkinModHelper.Module
             if (inGame)
             {
                 skinSelectMenu.AddDescription(menu, Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DESCRIPTION"));
+                Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
+                if (player != null && player.StateMachine.State == Player.StIntroWakeUp)
+                {
+                    skinSelectMenu.Disabled = true;
+                }
             }
 
             menu.Add(skinSelectMenu);
