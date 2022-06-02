@@ -40,7 +40,8 @@ namespace SkinModHelper.Module
             "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
         };
 
-        public static Dictionary<uint, string> PlayerIDSkinMap;
+        public static Dictionary<uint, string> GhostIDSkinMap;
+        public static HashSet<uint> GhostIDRefreshSet;
 
         public SkinModHelperModule()
         {
@@ -48,7 +49,8 @@ namespace SkinModHelper.Module
             UI = new SkinModHelperUI();
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
 
-            PlayerIDSkinMap = new Dictionary<uint, string>();
+            GhostIDSkinMap = new Dictionary<uint, string>();
+            GhostIDRefreshSet = new HashSet<uint>();
         }
 
         public override void Load()
@@ -289,40 +291,54 @@ namespace SkinModHelper.Module
         private void PlayerSpriteRenderHook(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self)
         {
             DynamicData dd = new DynamicData(self);
+
+            if (self.Entity is Ghost g && GhostIDRefreshSet.Contains(g.PlayerInfo.ID))
+            {
+                dd.Set("patchedBySkinModHelper", false);
+                GhostIDRefreshSet.Remove(g.PlayerInfo.ID);
+            }
             
-            if (!dd.TryGet("patchedBySkinModHelper", out object _))
+            if (!(dd.TryGet("patchedBySkinModHelper", out object patched) && (bool) patched))
             {
                 string spriteName = dd.Get<string>("spriteName");
                 
                 if (self.Entity is Ghost ghost)
                 {
                     // If the current PlayerSprite belongs to a CelesteNet Ghost, use their selected skin
-                    if (PlayerIDSkinMap.ContainsKey(ghost.PlayerInfo.ID))
+                    if (GhostIDSkinMap.ContainsKey(ghost.PlayerInfo.ID))
                     {
-                        string suffix = PlayerIDSkinMap[ghost.PlayerInfo.ID];
-
-                        if (suffix != null && suffix != DEFAULT)
-                            GFX.SpriteBank.CreateOn(self, spriteName + '_' + suffix);
-                        else
-                            GFX.SpriteBank.CreateOn(self, spriteName);
+                        string suffix = GhostIDSkinMap[ghost.PlayerInfo.ID];
+                        ReplacePlayerSprite(self, spriteName, suffix);
                     }
                 }
                 else
                 {
                     // Otherwise, we're (most likely) the player, 
                     string suffix = Settings.SelectedSkinMod;
-
-                    if (suffix != null && suffix != DEFAULT)
-                        GFX.SpriteBank.CreateOn(self, spriteName + '_' + suffix);
-                    else
-                        GFX.SpriteBank.CreateOn(self, spriteName);
+                    ReplacePlayerSprite(self, spriteName, suffix);
                 }
                 
-                dd.Add("patchedBySkinModHelper", null);
+                dd.Add("patchedBySkinModHelper", true);
             }
             orig(self);
         }
 
+        private void ReplacePlayerSprite(PlayerSprite self, string spriteName, string suffix)
+        {
+            if (suffix != null && suffix != DEFAULT)
+            {
+                string newId = spriteName + '_' + suffix;
+                if (GFX.SpriteBank.SpriteData.ContainsKey(newId))
+                    GFX.SpriteBank.CreateOn(self, newId);
+                else
+                    GFX.SpriteBank.CreateOn(self, spriteName);
+            }
+            else
+            {
+                GFX.SpriteBank.CreateOn(self, spriteName);
+            }
+        }
+        
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
         private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id)
         {
@@ -625,19 +641,18 @@ namespace SkinModHelper.Module
         public static void UpdateSkin(string newSkinId)
         {
             Settings.SelectedSkinMod = newSkinId;
+
+            CelesteNetClient client = CelesteNetClientModule.Instance.Client;
+            client?.Con?.Send(new SkinModHelperChange{SkinID = newSkinId});
+
             UpdateParticles();
 
             Player player = (Engine.Scene)?.Tracker.GetEntity<Player>();
             if (player != null)
             {
-                if (player.Active)
-                {
-                    player.ResetSpriteNextFrame(player.Sprite.Mode);
-                }
-                else
-                {
-                    player.ResetSprite(player.Sprite.Mode);
-                }
+                DynamicData dd = new DynamicData(player.Sprite);
+                
+                dd.Add("patchedBySkinModHelper", false);
             }
         }
 

@@ -21,7 +21,8 @@ namespace SkinModHelper.Module
 
         public static void HandleSkinModHelperChange(CelesteNetConnection con, SkinModHelperChange data)
         {
-            SkinModHelperModule.PlayerIDSkinMap.Add(data.ChangePlayer.ID, data.SkinID);
+            SkinModHelperModule.GhostIDSkinMap.Add(data.ChangePlayer.ID, data.SkinID);
+            SkinModHelperModule.GhostIDRefreshSet.Add(data.ChangePlayer.ID);
         }
 
         private static DataHandler handleSkinModHelperChange;
