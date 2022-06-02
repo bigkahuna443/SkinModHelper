@@ -1,5 +1,8 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using Celeste.Mod.CelesteNet;
+using Celeste.Mod.CelesteNet.Client;
+using Celeste.Mod.CelesteNet.Client.Entities;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,8 +13,12 @@ using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Logger = Celeste.Mod.Logger;
+using LogLevel = Celeste.Mod.LogLevel;
 
 namespace SkinModHelper.Module
 {
@@ -33,11 +40,15 @@ namespace SkinModHelper.Module
             "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
         };
 
+        public static Dictionary<uint, string> PlayerIDSkinMap;
+
         public SkinModHelperModule()
         {
             Instance = this;
             UI = new SkinModHelperUI();
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
+
+            PlayerIDSkinMap = new Dictionary<uint, string>();
         }
 
         public override void Load()
@@ -55,6 +66,7 @@ namespace SkinModHelper.Module
             On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
             On.Celeste.PlayerDeadBody.Render += PlayerDeadBodyRenderHook;
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
+            On.Celeste.PlayerSprite.Render += PlayerSpriteRenderHook;
 
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
@@ -64,6 +76,8 @@ namespace SkinModHelper.Module
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
+
+            SkinModHelperCelesteNet.Load();
         }
 
         public override void LoadContent(bool firstLoad)
@@ -95,6 +109,8 @@ namespace SkinModHelper.Module
 
             On.Celeste.Player.UpdateHair -= PlayerUpdateHairHook;
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
+
+            SkinModHelperCelesteNet.Unload();
         }
 
         public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
@@ -270,9 +286,49 @@ namespace SkinModHelper.Module
             }
         }
 
+        private void PlayerSpriteRenderHook(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self)
+        {
+            DynamicData dd = new DynamicData(self);
+            
+            if (!dd.TryGet("patchedBySkinModHelper", out object _))
+            {
+                string spriteName = dd.Get<string>("spriteName");
+                
+                if (self.Entity is Ghost ghost)
+                {
+                    // If the current PlayerSprite belongs to a CelesteNet Ghost, use their selected skin
+                    if (PlayerIDSkinMap.ContainsKey(ghost.PlayerInfo.ID))
+                    {
+                        string suffix = PlayerIDSkinMap[ghost.PlayerInfo.ID];
+
+                        if (suffix != null && suffix != DEFAULT)
+                            GFX.SpriteBank.CreateOn(self, spriteName + '_' + suffix);
+                        else
+                            GFX.SpriteBank.CreateOn(self, spriteName);
+                    }
+                }
+                else
+                {
+                    // Otherwise, we're (most likely) the player, 
+                    string suffix = Settings.SelectedSkinMod;
+
+                    if (suffix != null && suffix != DEFAULT)
+                        GFX.SpriteBank.CreateOn(self, spriteName + '_' + suffix);
+                    else
+                        GFX.SpriteBank.CreateOn(self, spriteName);
+                }
+                
+                dd.Add("patchedBySkinModHelper", null);
+            }
+            orig(self);
+        }
+
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
         private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id)
         {
+            if (sprite is PlayerSprite)
+                return orig(self, sprite, id); // We handle PlayerSprites separately
+            
             String newId = id + "_" + Settings.SelectedSkinMod;
             if (self.SpriteData.ContainsKey(newId))
             {
