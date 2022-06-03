@@ -4,3 +4,5 @@
   Dependencies:
     - Name: Everest
       Version: 1.2742.0
+    - Name: CelesteNet.Client
+      Version: 2.0.0

@@ -24,6 +24,12 @@
     <Reference Include="MMHOOK_Celeste" HintPath="..\..\MMHOOK_Celeste.dll" />
     <Reference Include="YamlDotNet" HintPath="..\..\YamlDotNet.dll" />
     <Reference Include="FNA" HintPath="..\..\FNA.dll" />
+    <Reference Include=".\lib-stripped\CelesteNet.Client.dll">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include=".\lib-stripped\CelesteNet.Shared.dll">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
