@@ -21,7 +21,6 @@ namespace SkinModHelper.Module
 
         public static void HandleSkinModHelperChange(CelesteNetConnection con, SkinModHelperChange data)
         {
-            SkinModHelperModule.GhostIDSkinMap[data.ChangePlayer.ID] = data.SkinID;
             SkinModHelperModule.GhostIDRefreshSet.Add(data.ChangePlayer.ID);
         }
 
@@ -71,13 +70,15 @@ namespace SkinModHelper.Module
         {
             return new MetaType[]
             {
-                new MetaPlayerPrivateState(ChangePlayer)
+                new MetaPlayerPrivateState(ChangePlayer),
+                new MetaBoundRef(DataType<DataPlayerInfo>.DataID, ChangePlayer?.ID ?? uint.MaxValue, true)
             };
         }
 
         public override void FixupMeta(DataContext ctx)
         {
             ChangePlayer = Get<MetaPlayerPrivateState>(ctx).Player;
+            Get<MetaBoundRef>(ctx).ID = ChangePlayer?.ID ?? uint.MaxValue;
         }
 
         protected override void Read(CelesteNetBinaryReader reader)

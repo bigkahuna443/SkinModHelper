@@ -3,6 +3,7 @@ using Celeste.Mod;
 using Celeste.Mod.CelesteNet;
 using Celeste.Mod.CelesteNet.Client;
 using Celeste.Mod.CelesteNet.Client.Entities;
+using Celeste.Mod.CelesteNet.DataTypes;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -40,7 +41,6 @@ namespace SkinModHelper.Module
             "player", "player_no_backpack", "badeline", "player_badeline", "player_playback" 
         };
 
-        public static Dictionary<uint, string> GhostIDSkinMap;
         public static HashSet<uint> GhostIDRefreshSet;
 
         public SkinModHelperModule()
@@ -49,7 +49,6 @@ namespace SkinModHelper.Module
             UI = new SkinModHelperUI();
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
 
-            GhostIDSkinMap = new Dictionary<uint, string>();
             GhostIDRefreshSet = new HashSet<uint>();
         }
 
@@ -305,9 +304,16 @@ namespace SkinModHelper.Module
                 if (self.Entity is Ghost ghost)
                 {
                     // If the current PlayerSprite belongs to a CelesteNet Ghost, use their selected skin
-                    if (GhostIDSkinMap.ContainsKey(ghost.PlayerInfo.ID))
+                    CelesteNetClient client = CelesteNetClientModule.Instance.Client;
+                    if (
+                        client.Data.TryGetBoundRef<DataPlayerInfo, SkinModHelperChange>(
+                            ghost.PlayerInfo.ID,
+                            out SkinModHelperChange recentChange
+                        ) &&
+                        recentChange != null
+                    )
                     {
-                        string suffix = GhostIDSkinMap[ghost.PlayerInfo.ID];
+                        string suffix = recentChange.SkinID;
                         ReplacePlayerSprite(self, spriteName, suffix);
                     }
                 }
