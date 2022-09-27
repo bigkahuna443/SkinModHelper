@@ -1,0 +1,22 @@
+name: Feature Request
+description: Suggest a feature for the mod
+title: "[Feature]: "
+labels: ["enhancement"]
+body:              
+  - type: textarea
+    id: request
+    attributes:
+      label: Request Description
+      description: Please describe your request.
+      value: "Attach screenshots, concept art, etc. as needed."
+    validations:
+      required: true
+      
+  - type: input
+    id: deadline
+    attributes:
+      label: Target Date
+      description: If you have a time requirement, e.g. for a contest, list it here.
+      placeholder: Filling this out does not guarantee we can fulfill the request.
+    validations:
+      required: false

@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download Everest stripped lib
+      uses: robinraju/release-downloader@v1.5
+      with:
+        repository: EverestAPI/Everest
+        latest: true
+        fileName: lib-stripped.zip
+        
+    - name: Extract lib-stripped.zip
+      run: unzip lib-stripped.zip
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Build with .NET Core
+      run: dotnet build --configuration Debug --no-restore
+      env:
+        CELESTEPREFIX: ${{ github.workspace }}/lib-stripped
+
+    - name: Upload build
+      uses: actions/upload-artifact@v3
+      with:
+        name: bin
+        path: Code/bin/Debug/net452
