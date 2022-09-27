@@ -1,43 +1,35 @@
-﻿using Celeste;
-using Celeste.Mod;
-using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using SkinModHelper.Module;
 
-namespace SkinModHelper
-{
+namespace Celeste.Mod.SkinModHelper {
     [CustomEntity("SkinModHelper/SkinSwapTrigger")]
-    class SkinSwapTrigger : Trigger
-    {
-        private string skinId;
+    internal class SkinSwapTrigger : Trigger {
+        private readonly string skinId;
+        private readonly bool revertOnLeave;
         private string oldSkinId;
-        private bool revertOnLeave;
 
-        public SkinSwapTrigger(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        public SkinSwapTrigger(EntityData data, Vector2 offset) 
+            : base(data, offset) {
             skinId = data.Attr("skinId", SkinModHelperModule.DEFAULT);
             revertOnLeave = data.Bool("revertOnLeave", false);
 
             oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
         }
 
-        public override void OnEnter(Player player)
-        {
+        public override void OnEnter(Player player) {
             base.OnEnter(player);
-            if (skinId != SkinModHelperModule.DEFAULT && !SkinModHelperModule.skinConfigs.ContainsKey(skinId))
-            {
+            if (skinId != SkinModHelperModule.DEFAULT && !SkinModHelperModule.skinConfigs.ContainsKey(skinId)) {
                 Logger.Log(LogLevel.Warn, "SkinModHelper/SkinModSwapTrigger", $"Tried to swap to unknown skin ID {skinId}.");
                 return;
             }
+
             oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
             SkinModHelperModule.UpdateSkin(skinId);
         }
 
-        public override void OnLeave(Player player)
-        {
+        public override void OnLeave(Player player) {
             base.OnLeave(player);
-            if (revertOnLeave)
-            {
+            if (revertOnLeave) {
                 SkinModHelperModule.UpdateSkin(oldSkinId);
             }
         }
