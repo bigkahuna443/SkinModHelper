@@ -36,9 +36,6 @@ namespace Celeste.Mod.SkinModHelper {
         }
 
         public override void Load() {
-            Logger.SetLogLevel("SkinModHelper", LogLevel.Info);
-            Logger.Log("SkinModHelper", "Initializing SkinModHelper");
-
             SkinModHelperInterop.Load();
 
             Everest.Content.OnUpdate += EverestContentUpdateHook;
@@ -70,8 +67,6 @@ namespace Celeste.Mod.SkinModHelper {
         }
 
         public override void Unload() {
-            Logger.Log("SkinModHelper", "Unloading SkinModHelper");
-
             Everest.Content.OnUpdate -= EverestContentUpdateHook;
 
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
@@ -287,76 +282,49 @@ namespace Celeste.Mod.SkinModHelper {
         private void DreamBlockHook(ILContext il) {
             ILCursor cursor = new(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/dreamblock/particles"))) {
-                Logger.Log("SkinModHelper", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplaceDreamBlockParticle);
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return GetReskinPath("objects/dreamblock/particles");
+                });
             }
-        }
-
-        private static string ReplaceDreamBlockParticle(string dreamBlockParticle) {
-            if (UniqueSkinSelected()) {
-                string newDreamBlockParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/dreamblock/particles";
-                if (GFX.Game.Has(newDreamBlockParticle)) {
-                    return newDreamBlockParticle;
-                }
-            }
-
-            return dreamBlockParticle;
         }
 
         private void DeathEffectDrawHook(ILContext il) {
             ILCursor cursor = new(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/hair00"))) {
-                Logger.Log("SkinModHelper", $"Changing hair path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplaceDeathParticle);
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return GetReskinPath("characters/player/death_particle");
+                });
             }
-        }
-
-        private static string ReplaceDeathParticle(string deathParticle) {
-            if (UniqueSkinSelected()) {
-                string newDeathParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/death_particle";
-                if (GFX.Game.Has(newDeathParticle)) {
-                    return newDeathParticle;
-                }
-            }
-
-            return deathParticle;
         }
 
         private void FlyFeatherHook(ILContext il) {
             ILCursor cursor = new(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/flyFeather/outline"))) {
-                Logger.Log("SkinModHelper", $"Changing feather outline path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplaceFeatherOutline);
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return GetReskinPath("objects/flyFeather/outline");
+                });
             }
         }
 
         private void PlayerRenderIlHook(ILContext il) {
             ILCursor cursor = new(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/startStarFlyWhite"))) {
-                Logger.Log("SkinModHelper", $"Changing startStarFlyWhite path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
                 cursor.EmitDelegate<Func<string, string>>((orig) => {
-                    if (UniqueSkinSelected()) {
-                        string newAnimPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/startStarFlyWhite";
-                        if (GFX.Game.Has(newAnimPath + "00")) {
-                            return newAnimPath;
-                        }
-                    }
-
-                    return orig;
+                    string newPath = GetReskinPath("characters/player/startStarFlyWhite00");
+                    return newPath.Substring(0, newPath.Length - 2);
                 });
             }
         }
 
-        private static string ReplaceFeatherOutline(string featherOutline) {
+        private static string GetReskinPath(string orig) {
             if (UniqueSkinSelected()) {
-                string newFeatherOutline = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "objects/flyFeather/outline";
-                if (GFX.Game.Has(newFeatherOutline)) {
-                    return newFeatherOutline;
-                }
+                string newPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + orig;
+                return GFX.Game.Has(newPath) ? newPath : orig;
             }
 
-            return featherOutline;
+            return orig;
         }
+
 
         private void SwapTextboxHook(ILContext il) {
             ILCursor cursor = new(il);
@@ -365,8 +333,9 @@ namespace Celeste.Mod.SkinModHelper {
             }
             // Make sure nothing went wrong
             if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true) {
-                Logger.Log("SkinModHelper", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplacePortraitPath);
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) => {
+                    return ReplacePortraitPath(orig);
+                });
             }
         }
 
@@ -378,14 +347,16 @@ namespace Celeste.Mod.SkinModHelper {
             }
             // Make sure nothing went wrong
             if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true) {
-                Logger.Log("SkinModHelper", $"Changing portrait path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplacePortraitPath);
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) => {
+                    return ReplacePortraitPath(orig);
+                });
             }
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("_ask"),
                 instr => instr.MatchCall(out MethodReference method) && method.Name == "Concat")) {
-                Logger.Log("SkinModHelper", $"Changing textbox path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate(ReplaceTextboxPath);
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return ReplaceTextboxPath(orig);
+                });
             }
         }
 
@@ -457,10 +428,10 @@ namespace Celeste.Mod.SkinModHelper {
         private SpriteBank BuildBank(SpriteBank origBank, string xmlPath) {
             try {
                 SpriteBank newBank = new(origBank.Atlas, xmlPath);
-                Logger.Log("SkinModHelper", $"Built sprite bank for {xmlPath}.");
+                Logger.Log(LogLevel.Verbose, "SkinModHelper", $"Built sprite bank for {xmlPath}.");
                 return newBank;
             } catch (Exception e) {
-                Logger.Log("SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
+                Logger.Log(LogLevel.Warn, "SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
                 return null;
             }
         }
