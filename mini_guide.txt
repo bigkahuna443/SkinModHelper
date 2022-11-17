@@ -1,0 +1,100 @@
+
+---About the settable content of the new Config---
+
+{Options}: the same as the old "SkinID", is Required
+
+
+{Player_List}: can be set to true of false. if is true, so this skin can be selected from the "Player Skin Options", 
+                    that will determine the "{SpriteModeValue} / cardinality" you get.
+{Silhouette_List}: same as "{Player_List}", Let the Player choose whether the silhouette can get this Skin's cardinality.
+
+
+{Character_ID}: Set your custom skin ID here, that ID must exist in "YourMod/Graphics/Sprite.xml", and will be used by the player
+{SpriteModeValue}: Bind data such as a skin ID to this {SpriteModeValue}, it needs to be a unique number not less than 5
+
+
+{SpecificPlayerSprite_Path}: Set custom "bangs, hair, death_particles"etc sprites's root directory Path
+                                          starting point is "Gameplay/", Default value is "characters/{Character_ID}"
+{OtherSprite_Path}: Set custom Xmls's root directory Path, Those Xmls will override the corresponding content of other Xmls, is the highest level
+                              starting point is "Graphics/", None Default value
+{colorGrade_Path}: Set custom colorGrade's root directory Path, 
+                             starting point is "Graphics/ColorGrading/", None Default value
+
+
+
+{SpriteMode_hasBackPack}: Depending on your "backpack options", "{SpriteModeValue} / cardinality" will 
+                                           combine with this to get a new number, and then finally determine you get custom skin ID, can be set without
+{SpriteMode_NoBackPack}: same as "{SpriteMode_hasBackPack}"
+
+{SpriteMode_JungleLantern}: If your mod doesn't need to be compatible with the "JungleHelper", then you don't need to set this
+                                            When you lift the lantern, "{SpriteModeValue} / cardinality" will be combined with this number
+{SpriteMode_JungleLantern_NoBackPack}: No need for extra explanation
+
+
+{HairColors}: Little has changed from before
+
+{ILHookReturnValue}: similar to role orientation, If it's 3, then you get hair in the default Badeline color
+                                                                          You can also set this value to 444482 or 444483, those allow this skin to be recognized by JungleHelper
+
+{OtherSprite_ExPath}: If it is set, then in SkinModHelper's extra settings, you can see some new options
+                                  Those options can be like a whitelist, choose any combination of Xmls you want
+
+
+
+
+
+
+
+
+
+
+
+
+---About SkinModHelperConfig.yaml---
+- Options: "SkinTest_TestA"
+  OtherSprite_ExPath: "SkinTest/TestA"
+
+- Options: "SkinTest_TestB"
+  OtherSprite_ExPath: "SkinTest/TestB"
+
+
+- Options: "gfdljoijog"
+  Player_List: true
+  Silhouette_List: false
+
+  SpriteModeValue: 123456789
+  ILHookReturnValue: 3
+  Character_ID: "player"
+  OtherSprite_Path: "SkinTest/TestA"
+
+  SpriteMode_hasBackPack: 0
+  SpriteMode_NoBackPack: 1
+
+
+- Options: "gfdljoijog_x2"
+
+  SpriteModeValue: 123456790
+  ILHookReturnValue: 4
+  Character_ID: "player_no_backpack"
+
+  SpriteMode_hasBackPack: -1
+  SpriteMode_NoBackPack: 0
+
+
+- Options: "gfdljoijog_Silhouette"
+  Player_List: false
+  Silhouette_List: true
+
+  SpriteModeValue: 123456780
+  ILHookReturnValue: 4
+  Character_ID: "player_playback"
+
+  SpriteMode_hasBackPack: 10
+  SpriteMode_NoBackPack: 0
+
+
+
+
+
+
+

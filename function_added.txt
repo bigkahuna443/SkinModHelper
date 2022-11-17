@@ -1,0 +1,17 @@
+
+
+- single SkinModHelperConfig.yaml can set countless options, be like "Achievement Helper"
+
+- Added "silhouette skin" option and "backpack option"
+
+- Multiple Xmls can be set at the same time, they are like a whitelist (Among all Xmls, PlayerSkin(SkinID)'s Xml will be the highest priority)
+
+- Compatible with CelesteNet using new mechanism
+
+- About the modify content of ConfigFiles, see the sample at the end of the mini_guide
+
+
+
+- New code for "SwapSkinTrigger" not made, please don't use "SwapSkinTrigger" in this version
+
+- The version number is set to 0.0.1 to prevent the JungleHelper or OtherMod from crashing in this version

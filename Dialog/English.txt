@@ -1,4 +1,15 @@
-SKIN_MOD_HELPER_SETTINGS_TITLE=Skin Mod Helper
-SKIN_MOD_HELPER_SETTINGS_DEFAULT=Default
-SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD=Skin Mod
-SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DESCRIPTION=Some sprites may not reload immediately
+
+SkinModHelper_options_Backpack=Backpack
+
+SkinModHelper_options_BackpackMode_Default=Default
+SkinModHelper_options_BackpackMode_Off=Off
+SkinModHelper_options_BackpackMode_On=On
+
+SkinModHelper_Settings_PlayerSkin_Selected=Player Skin
+SkinModHelper_Settings_DefaultPlayer=Default
+
+SkinModHelper_Settings_SilhouetteSkin_Selected=Silhouette Skin
+SkinModHelper_Settings_DefaultSilhouette=Default
+
+
+SkinModHelper_Settings_Otherskin=Extra Settings

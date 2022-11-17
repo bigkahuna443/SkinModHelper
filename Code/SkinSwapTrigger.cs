@@ -13,7 +13,7 @@ namespace Celeste.Mod.SkinModHelper {
             skinId = data.Attr("skinId", SkinModHelperModule.DEFAULT);
             revertOnLeave = data.Bool("revertOnLeave", false);
 
-            oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
+            oldSkinId = SkinModHelperModule.Settings.SelectedPlayerSkin;
         }
 
         public override void OnEnter(Player player) {
@@ -23,7 +23,7 @@ namespace Celeste.Mod.SkinModHelper {
                 return;
             }
 
-            oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
+            oldSkinId = SkinModHelperModule.Settings.SelectedPlayerSkin;
             SkinModHelperModule.UpdateSkin(skinId);
         }
 

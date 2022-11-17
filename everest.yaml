@@ -1,6 +1,11 @@
 - Name: SkinModHelper
-  Version: 0.6.1
+  Version: 0.0.1
   DLL: Code/bin/SkinModHelper.dll
   Dependencies:
     - Name: Everest
       Version: 1.2742.0
+  OptionalDependencies:
+    - Name: JungleHelper
+      Version: 1.0.8
+    - Name: ExtendedVariantMode
+      Version: 0.22.21
