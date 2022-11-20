@@ -12,6 +12,10 @@
 
 
 
+- Fixed custom-hair-color not synch dash-trail-color
+
+
+
 - New code for "SwapSkinTrigger" not made, please don't use "SwapSkinTrigger" in this version
 
-- The version number is set to 0.0.1 to prevent the JungleHelper or OtherMod from crashing in this version
+- The version number is set to 1.0.0 to prevent the JungleHelper or OtherMod from crashing in this version
