@@ -537,8 +537,6 @@ namespace Celeste.Mod.SkinModHelper
         {
             int dashCount = Math.Min(self.Dashes, MAX_DASHES);
 
-            new DynData<PlayerSprite>(self.Sprite)["PlayerSelf"] = true;
-
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
                 if ((self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
@@ -547,21 +545,7 @@ namespace Celeste.Mod.SkinModHelper
                     {
                         dashCount--;
                     }
-                    string colorGrade_Path = config.colorGrade_Path + "/dash" + dashCount;
-
-                    if (colorGrade_Path != null && GFX.ColorGrades.Has(colorGrade_Path))
-                    {
-                        Effect colorGradeEffect = GFX.FxColorGrading;
-                        colorGradeEffect.CurrentTechnique = colorGradeEffect.Techniques["ColorGradeSingle"];
-                        Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGrade_Path].Texture.Texture_Safe;
-                        Scene scene = self.Scene ?? Engine.Scene;
-                        Draw.SpriteBatch.End();
-                        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, colorGradeEffect, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        orig(self);
-                        Draw.SpriteBatch.End();
-                        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        return;
-                    }
+                    new DynData<PlayerSprite>(self.Sprite)["DashCount"] = dashCount;
                 }
             }
             orig(self);
@@ -571,27 +555,13 @@ namespace Celeste.Mod.SkinModHelper
         {
             PlayerSprite sprite = new DynData<PlayerDeadBody>(self).Get<PlayerSprite>("sprite");
 
-            new DynData<PlayerSprite>(sprite)["PlayerSelf"] = true;
+            new DynData<PlayerSprite>(sprite)["DashCount"] = 1;
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
                 if ((sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
                 {
-                    string colorGrade_Path = config.colorGrade_Path + "/dash" + 1;
-
-                    if (colorGrade_Path != null && GFX.ColorGrades.Has(colorGrade_Path))
-                    {
-                        Effect colorGradeEffect = GFX.FxColorGrading;
-                        colorGradeEffect.CurrentTechnique = colorGradeEffect.Techniques["ColorGradeSingle"];
-                        Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGrade_Path].Texture.Texture_Safe;
-                        Scene scene = self.Scene ?? Engine.Scene;
-                        Draw.SpriteBatch.End();
-                        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, colorGradeEffect, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        orig(self);
-                        Draw.SpriteBatch.End();
-                        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        return;
-                    }
+                    new DynData<PlayerSprite>(sprite)["DashCount"] = 1;
                 }
             }
             orig(self);
@@ -601,27 +571,32 @@ namespace Celeste.Mod.SkinModHelper
         {
             DynData<PlayerSprite> selfData = new DynData<PlayerSprite>(self);
 
-            if (selfData.Get<bool?>("PlayerSelf") == true)
+            int dashCount = 1;
+            if (selfData.Get<int?>("DashCount") != null)
             {
+                dashCount = (int)selfData.Get<int?>("DashCount");
                 orig(self);
-                return;
             }
+            string colorGrade_Path = null;
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
                 if ((self.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
                 {
-                    string colorGrade_Path = config.colorGrade_Path + "/dash" + 1;
-
-                    if (colorGrade_Path != null && GFX.ColorGrades.Has(colorGrade_Path))
+                    colorGrade_Path = config.colorGrade_Path + "/dash" + dashCount;
+                    if (GFX.ColorGrades.Has(colorGrade_Path))
                     {
                         Effect colorGradeEffect = GFX.FxColorGrading;
                         colorGradeEffect.CurrentTechnique = colorGradeEffect.Techniques["ColorGradeSingle"];
                         Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGrade_Path].Texture.Texture_Safe;
                         Scene scene = self.Scene ?? Engine.Scene;
+
+                        orig(self); //Before executing the next line of code, Prevent Dash-Trail loss
                         Draw.SpriteBatch.End();
                         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, colorGradeEffect, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        orig(self);
+                        orig(self); 
+                        //But if the silhouette (or CelesteNet's other?) enabled New ColorGrade, and spawns Dash-Trail with the player at the same time,
+                        //so the player's Dash-Trail will still be lost
                         Draw.SpriteBatch.End();
                         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (scene as Level).GameplayRenderer.Camera.Matrix);
                         return;
@@ -630,8 +605,6 @@ namespace Celeste.Mod.SkinModHelper
             }
             orig(self);
         }
-
-
 
         // ---Custom Dash Color---
         public int lastDashes = 0;
