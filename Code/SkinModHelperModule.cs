@@ -535,18 +535,26 @@ namespace Celeste.Mod.SkinModHelper
         // ---Custom ColorGrade---
         private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
         {
-            int dashCount = Math.Min(self.Dashes, MAX_DASHES);
+            int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
+            bool MaxDashZero = self.MaxDashes <= 0;
 
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
+            if (Player_Skinid_verify != 0 && !MaxDashZero)
             {
-                if ((self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
                 {
-                    while (dashCount > 2 && !GFX.ColorGrades.Has(config.colorGrade_Path + "/dash" + dashCount))
+                    if ((self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
                     {
-                        dashCount--;
+                        while (dashCount > 2 && !GFX.ColorGrades.Has(config.colorGrade_Path + "/dash" + dashCount))
+                        {
+                            dashCount--;
+                        }
+                        new DynData<PlayerSprite>(self.Sprite)["DashCount"] = dashCount;
                     }
-                    new DynData<PlayerSprite>(self.Sprite)["DashCount"] = dashCount;
                 }
+            }
+            else 
+            { 
+                new DynData<PlayerSprite>(self.Sprite)["DashCount"] = 1; 
             }
             orig(self);
         }
@@ -554,16 +562,7 @@ namespace Celeste.Mod.SkinModHelper
         private void PlayerDeadBodyRenderHook(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self)
         {
             PlayerSprite sprite = new DynData<PlayerDeadBody>(self).Get<PlayerSprite>("sprite");
-
             new DynData<PlayerSprite>(sprite)["DashCount"] = 1;
-
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if ((sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
-                {
-                    new DynData<PlayerSprite>(sprite)["DashCount"] = 1;
-                }
-            }
             orig(self);
         }
 
@@ -575,7 +574,6 @@ namespace Celeste.Mod.SkinModHelper
             if (selfData.Get<int?>("DashCount") != null)
             {
                 dashCount = (int)selfData.Get<int?>("DashCount");
-                orig(self);
             }
             string colorGrade_Path = null;
 
@@ -613,7 +611,7 @@ namespace Celeste.Mod.SkinModHelper
         {
             orig(self, applyGravity);
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
-            bool MaxDashZero = !(dashCount < self.MaxDashes);
+            bool MaxDashZero = self.MaxDashes <= 0;
 
             if (Player_Skinid_verify != 0 && self.StateMachine.State != Player.StStarFly)
             {
@@ -621,12 +619,9 @@ namespace Celeste.Mod.SkinModHelper
                 {
                     foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
                     {
-                        if (Player_Skinid_verify == config.SpriteModeValue)
+                        if (Player_Skinid_verify == config.SpriteModeValue && config.HairColors != null)
                         {
-                            if (config.HairColors != null)
-                            {
-                                self.Hair.Color = Color.Lerp(config.GeneratedHairColors[dashCount], config.GeneratedHairColors[dashCount], 6f * Engine.DeltaTime);
-                            }
+                            self.Hair.Color = Color.Lerp(config.GeneratedHairColors[dashCount], config.GeneratedHairColors[dashCount], 6f * Engine.DeltaTime);
                         }
                     }
                 }
@@ -645,7 +640,7 @@ namespace Celeste.Mod.SkinModHelper
                             {
                                 if (MaxDashZero)
                                 {
-                                    self.Hair.Color = config.GeneratedHairColors[dashCount + 1];
+                                    self.Hair.Color = config.GeneratedHairColors[1];
                                 }
                                 else
                                 {
@@ -661,10 +656,6 @@ namespace Celeste.Mod.SkinModHelper
                     }
                 }
             }
-            if (self.DefaultSpriteMode == PlayerSpriteMode.Playback)
-            {
-                self.Sprite.Color = self.Hair.Color;
-            }
             lastDashes = self.Dashes;
         }
 
@@ -675,12 +666,9 @@ namespace Celeste.Mod.SkinModHelper
             {
                 foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
                 {
-                    if (Player_Skinid_verify == config.SpriteModeValue)
+                    if (Player_Skinid_verify == config.SpriteModeValue && config.HairColors != null)
                     {
-                        if (config.HairColors != null)
-                        {
-                            return self.Hair.Color = config.GeneratedHairColors[dashCount];
-                        }
+                        return self.Hair.Color = config.GeneratedHairColors[dashCount];
                     }
                 }
             }
