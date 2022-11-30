@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Mono.Cecil.Cil;
 
 using Celeste.Mod.JungleHelper;
 
@@ -66,20 +67,22 @@ namespace Celeste.Mod.SkinModHelper
             On.Celeste.Player.UpdateHair += PlayerUpdateHairHook;
             On.Celeste.Player.GetTrailColor += PlayerGetTrailColorHook;
 
-            IL.Celeste.Player.UpdateHair += patch_SpriteMode_Checks;
-            IL.Celeste.Player.DashUpdate += patch_SpriteMode_Checks;
-            IL.Celeste.Player.GetTrailColor += patch_SpriteMode_Checks;
-            IL.Celeste.PlayerPlayback.SetFrame += patch_SpriteMode_Checks;
+            IL.Celeste.Player.UpdateHair += patch_SpriteMode_Badeline;
+            IL.Celeste.Player.DashUpdate += patch_SpriteMode_Badeline;
+            IL.Celeste.Player.GetTrailColor += patch_SpriteMode_Badeline;
+            IL.Celeste.PlayerPlayback.SetFrame += patch_SpriteMode_Silhouette;
 
             On.Celeste.PlayerSprite.ctor += on_PlayerSprite_ctor;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOn;
 
             On.Celeste.Lookout.Interact += on_Lookout_Interact;
+            IL.Celeste.Player.Render += PlayerRenderIlHook;
 
             On.Celeste.Player.Render += PlayerRenderHook;
             On.Celeste.PlayerDeadBody.Render += PlayerDeadBodyRenderHook;
             On.Celeste.PlayerSprite.Render += OnPlayerSpriteRender;
 
+            IL.Celeste.Player.Render += PlayerRenderIlHook_LoopReLoad;
             On.Celeste.PlayerHair.GetHairTexture += PlayerHairGetHairTextureHook;
 
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
@@ -89,22 +92,22 @@ namespace Celeste.Mod.SkinModHelper
             On.Celeste.GameLoader.LoadThread += GameLoaderLoadThreadHook;
 
             IL.Celeste.DeathEffect.Draw += DeathEffectDrawHook;
-            IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
             IL.Celeste.FlyFeather.ctor_Vector2_bool_bool += FlyFeatherHook;
+
+            IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
                 SwapTextboxHook);
 
-            if (JungleHelperInstalled)
-            {
+            if (JungleHelperInstalled) {
                 JungleHelperInstalled_Hook();
             }
         }
+
         public override void LoadContent(bool firstLoad)
         {
             base.LoadContent(firstLoad);
-
             ReloadSettings();
             UpdateParticles();
         }
@@ -116,20 +119,22 @@ namespace Celeste.Mod.SkinModHelper
             On.Celeste.Player.UpdateHair -= PlayerUpdateHairHook;
             On.Celeste.Player.GetTrailColor -= PlayerGetTrailColorHook;
 
-            IL.Celeste.Player.UpdateHair -= patch_SpriteMode_Checks;
-            IL.Celeste.Player.DashUpdate -= patch_SpriteMode_Checks;
-            IL.Celeste.Player.GetTrailColor -= patch_SpriteMode_Checks;
-            IL.Celeste.PlayerPlayback.SetFrame -= patch_SpriteMode_Checks;
+            IL.Celeste.Player.UpdateHair -= patch_SpriteMode_Badeline;
+            IL.Celeste.Player.DashUpdate -= patch_SpriteMode_Badeline;
+            IL.Celeste.Player.GetTrailColor -= patch_SpriteMode_Badeline;
+            IL.Celeste.PlayerPlayback.SetFrame -= patch_SpriteMode_Silhouette;
 
             On.Celeste.PlayerSprite.ctor -= on_PlayerSprite_ctor;
             On.Monocle.SpriteBank.CreateOn -= SpriteBankCreateOn;
 
             On.Celeste.Lookout.Interact -= on_Lookout_Interact;
+            IL.Celeste.Player.Render -= PlayerRenderIlHook;
 
             On.Celeste.Player.Render -= PlayerRenderHook;
             On.Celeste.PlayerDeadBody.Render -= PlayerDeadBodyRenderHook;
             On.Celeste.PlayerSprite.Render -= OnPlayerSpriteRender;
 
+            IL.Celeste.Player.Render -= PlayerRenderIlHook_LoopReLoad;
             On.Celeste.PlayerHair.GetHairTexture -= PlayerHairGetHairTextureHook;
 
             On.Monocle.SpriteBank.Create -= SpriteBankCreateHook;
@@ -158,10 +163,10 @@ namespace Celeste.Mod.SkinModHelper
 
         public void SpecificSprite_LoopReload()
         {
-            IL.Celeste.Player.Render -= PlayerRenderIlHook;
+            IL.Celeste.Player.Render -= PlayerRenderIlHook_LoopReLoad;
             if (Player_Skinid_verify != 0)
             {
-                IL.Celeste.Player.Render += PlayerRenderIlHook;
+                IL.Celeste.Player.Render += PlayerRenderIlHook_LoopReLoad;
             }
 
             string skinId = XmlCombineValue();
@@ -262,8 +267,8 @@ namespace Celeste.Mod.SkinModHelper
                 {
                     if (config.Options == Settings.SelectedSilhouetteSkin)
                     {
+                        selfData["isSilhouette"] = true;
                         if (playback){ PlayerSelf = true;}
-                        else { isSilhouette = true;}
                         if (!backpackOn)
                         {
                             mode = (PlayerSpriteMode)(config.SpriteModeValue + config.SpriteMode_NoBackPack);
@@ -324,8 +329,7 @@ namespace Celeste.Mod.SkinModHelper
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
-                if ((config.ILHookReturnValue == 444482 || config.ILHookReturnValue == 444483) && 
-                    (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue))
+                if (config.JungleLanternMode == true && (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue))
                 {
                     // replay the "idle" sprite to make it apply immediately.
                     self.Play("idle", restart: true);
@@ -357,24 +361,37 @@ namespace Celeste.Mod.SkinModHelper
         }
 
 
-        private void patch_SpriteMode_Checks(ILContext il)
+        private void patch_SpriteMode_Badeline(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<PlayerSprite>("get_Mode")))
-            {
-                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig =>
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<PlayerSprite>("get_Mode"))) {
+                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig => 
                 {
-                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                    {
-                        if (orig == (PlayerSpriteMode)config.SpriteModeValue)
-                        {
-                            return (PlayerSpriteMode)config.ILHookReturnValue;
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (orig == (PlayerSpriteMode)config.SpriteModeValue && config.BadelineMode == true) {
+                            return (PlayerSpriteMode)3;
                         }
                     }
                     return orig;
                 });
             }
         }
+        private void patch_SpriteMode_Silhouette(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<PlayerSprite>("get_Mode"))) {
+                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig =>
+                {
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (orig == (PlayerSpriteMode)config.SpriteModeValue && config.SilhouetteMode == true) {
+                            return (PlayerSpriteMode)4;
+                        }
+                    }
+                    return orig;
+                });
+            }
+        }
+
         private static void on_Lookout_Interact(On.Celeste.Lookout.orig_Interact orig, Lookout self, Player player)
         {
             orig(self, player);
@@ -506,8 +523,6 @@ namespace Celeste.Mod.SkinModHelper
                             Logger.Log(LogLevel.Info, "SkinModHelper", $"Registered new skin: {config.Options}");
                             skinConfigs.Add(config.Options, config);
                         }
-
-
                     }
                 }
             }
@@ -538,7 +553,7 @@ namespace Celeste.Mod.SkinModHelper
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
             bool MaxDashZero = self.MaxDashes <= 0;
 
-            if (Player_Skinid_verify != 0 && !MaxDashZero)
+            if (!MaxDashZero)
             {
                 foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
                 {
@@ -568,117 +583,121 @@ namespace Celeste.Mod.SkinModHelper
 
         private void OnPlayerSpriteRender(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self)
         {
+            orig(self);
             DynData<PlayerSprite> selfData = new DynData<PlayerSprite>(self);
-
+            if ((selfData.Get<int?>("DashCount") == null) && (selfData.Get<bool?>("isGhost") != true) && (selfData.Get<bool?>("isSilhouette") != true)) {
+                //bug-mark if: "Vanilla Chapter-9's internet cafe"s wavedash.ppt Not be filtered
+                //then: it will have some UI bug
+                return;
+            }
             int dashCount = 1;
-            if (selfData.Get<int?>("DashCount") != null)
-            {
+            if (selfData.Get<int?>("DashCount") != null) {
                 dashCount = (int)selfData.Get<int?>("DashCount");
             }
-            string colorGrade_Path = null;
 
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if ((self.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
-                {
-                    colorGrade_Path = config.colorGrade_Path + "/dash" + dashCount;
-                    if (GFX.ColorGrades.Has(colorGrade_Path))
-                    {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if ((self.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null) {
+                    string colorGrade_Path = config.colorGrade_Path + "/dash" + dashCount;
+
+                    if (GFX.ColorGrades.Has(colorGrade_Path) && colorGrade_Path != null) {
                         Effect colorGradeEffect = GFX.FxColorGrading;
                         colorGradeEffect.CurrentTechnique = colorGradeEffect.Techniques["ColorGradeSingle"];
                         Engine.Graphics.GraphicsDevice.Textures[1] = GFX.ColorGrades[colorGrade_Path].Texture.Texture_Safe;
                         Scene scene = self.Scene ?? Engine.Scene;
 
-                        orig(self); //Before executing the next line of code, Prevent Dash-Trail loss
+                        //bug-mark if: the Silhouette (or CelesteNet's Other?) enabled New ColorGrade, and spawns Dash-Trail with the Player at the same time
+                        //then: the player's Dash-Trail will be lost
                         Draw.SpriteBatch.End();
                         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, colorGradeEffect, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        orig(self); 
-                        //But if the silhouette (or CelesteNet's other?) enabled New ColorGrade, and spawns Dash-Trail with the player at the same time,
-                        //so the player's Dash-Trail will still be lost
+                        orig(self);
                         Draw.SpriteBatch.End();
                         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, (scene as Level).GameplayRenderer.Camera.Matrix);
-                        return;
                     }
+                    break;
                 }
             }
-            orig(self);
         }
 
         // ---Custom Dash Color---
-        public int lastDashes = 0;
-        private float lastDashesCD;
         private void PlayerUpdateHairHook(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
         {
             orig(self, applyGravity);
+
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
             bool MaxDashZero = self.MaxDashes <= 0;
 
-            if (Player_Skinid_verify != 0 && self.StateMachine.State != Player.StStarFly)
-            {
-                if (dashCount == 0 && !MaxDashZero)
-                {
-                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                    {
-                        if (Player_Skinid_verify == config.SpriteModeValue && config.HairColors != null)
-                        {
-                            self.Hair.Color = Color.Lerp(config.GeneratedHairColors[dashCount], config.GeneratedHairColors[dashCount], 6f * Engine.DeltaTime);
-                        }
-                    }
-                }
-                else
-                {
-                    if (lastDashes != dashCount)
-                    {
-                        self.Hair.Color = Color.White;
-                        lastDashesCD = 0.12f;
-                    }
-                    else if (!(lastDashesCD > 0f))
-                    {
-                        foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                        {
-                            if (Player_Skinid_verify == config.SpriteModeValue && config.HairColors != null)
-                            {
-                                if (MaxDashZero)
-                                {
-                                    self.Hair.Color = config.GeneratedHairColors[1];
-                                }
-                                else
-                                {
-                                    self.Hair.Color = config.GeneratedHairColors[dashCount];
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        self.Hair.Color = Color.White;
-                        lastDashesCD -= Engine.DeltaTime;
-                    }
+            List <Color> GeneratedHairColors = null;
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.HairColors != null) {
+                    GeneratedHairColors = config.GeneratedHairColors;
                 }
             }
-            lastDashes = self.Dashes;
+
+            if (self.StateMachine.State != Player.StStarFly && self.Hair.Color != Color.White && GeneratedHairColors != null) {
+                if (MaxDashZero) {
+                    self.Hair.Color = GeneratedHairColors[1];
+                }
+                else {
+                    self.Hair.Color = GeneratedHairColors[dashCount];
+                }
+            }
         }
 
         private Color PlayerGetTrailColorHook(On.Celeste.Player.orig_GetTrailColor orig, Player self, bool wasDashB)
         {
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.HairColors != null)
-                    {
-                        return self.Hair.Color = config.GeneratedHairColors[dashCount];
-                    }
+
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.HairColors != null) {
+                    return config.GeneratedHairColors[dashCount];
                 }
             }
             return orig(self, wasDashB);
         }
 
+        private void PlayerRenderIlHook(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+
+            // jump to the usage of the Red color
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_Red")))
+            {
+                Logger.Log("SkinModHelper", $"Patching silhouette hair color at {cursor.Index} in IL code for Player.Render()");
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<Color, Player, Color>>((color, player) => {
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (player.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.SilhouetteMode == true) {
+                            if (player.Dashes == 0) {
+                                color = Calc.HexToColor("348DC1");
+                            }
+                            color = player.Hair.Color;
+                        }
+                        player.Hair.Color = color;
+                    }
+                    return color;
+                });
+            }
+
+            // jump to the usage of the White-color / Null-color
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
+            {
+                Logger.Log("SkinModHelper", $"Patching silhouette color at {cursor.Index} in IL code for Player.Render()");
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<Color, Player, Color>>((orig, self) => {
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.SilhouetteMode == true) {
+                            return self.Hair.Color;
+                        }
+                    }
+                    return orig;
+                });
+            }
+        }
+
 
 
         // ---Specific Player Sprite---
-        private void PlayerRenderIlHook(ILContext il)
+        private void PlayerRenderIlHook_LoopReLoad(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/startStarFlyWhite")))
@@ -1341,7 +1360,7 @@ namespace Celeste.Mod.SkinModHelper
         {
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
-                if ((config.ILHookReturnValue == 444482 || config.ILHookReturnValue == 444483) && mode == (PlayerSpriteMode)config.SpriteModeValue)
+                if (config.JungleLanternMode == true && mode == (PlayerSpriteMode)config.SpriteModeValue)
                 {
                     return true;
                 }

@@ -31,17 +31,17 @@
 {SpriteMode_JungleLantern_NoBackPack}: No need for extra explanation
 
 
+
 {HairColors}: Little has changed from before
 
-{ILHookReturnValue}: similar to role orientation, If it's 3, then you get hair in the default Badeline color
-                                                                          You can also set this value to 444482 or 444483, those allow this skin to be recognized by JungleHelper
+{BadelineMode}: if set to true, Can get Badeline's default hair color (purple), etc.
+{SilhouetteMode}: if set to true, then Will the player's all-body to get hair color, be like a silhouette
+
+{JungleLanternMode}: if set to true, then Will get some gameplay-effect of the Jungle Helper
+                                  But first need to enable Jungle Helper
 
 {OtherSprite_ExPath}: If it is set, then in SkinModHelper's extra settings, you can see some new options
                                   Those options can be like a whitelist, choose any combination of Xmls you want
-
-
-
-
 
 
 
@@ -63,36 +63,44 @@
   Silhouette_List: false
 
   SpriteModeValue: 123456789
-  ILHookReturnValue: 3
   Character_ID: "player"
+  SpecificPlayerSprite_Path: "SkinTest/TestA"
   OtherSprite_Path: "SkinTest/TestA"
 
   SpriteMode_hasBackPack: 0
   SpriteMode_NoBackPack: 1
 
 
+
+
 - Options: "gfdljoijog_x2"
 
+  BadelineMode: true
   SpriteModeValue: 123456790
-  ILHookReturnValue: 4
   Character_ID: "player_no_backpack"
 
-  SpriteMode_hasBackPack: -1
-  SpriteMode_NoBackPack: 0
+
 
 
 - Options: "gfdljoijog_Silhouette"
-  Player_List: false
+  Player_List: true
   Silhouette_List: true
 
+  BadelineMode: true
+  SilhouetteMode: true
   SpriteModeValue: 123456780
-  ILHookReturnValue: 4
   Character_ID: "player_playback"
 
   SpriteMode_hasBackPack: 10
   SpriteMode_NoBackPack: 0
 
-
+  HairColors:
+  - Dashes: 0
+    Color: "8084BA"
+  - Dashes: 1
+    Color: "4954E8"
+  - Dashes: 2
+    Color: "712BBA"
 
 
 

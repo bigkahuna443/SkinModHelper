@@ -13,9 +13,13 @@ namespace Celeste.Mod.SkinModHelper {
 
 
         public int SpriteModeValue { get; set; }
-        public int Character_Orientation { get; set; }
-        public int ILHookReturnValue { get; set; }
         public string Character_ID { get; set; }
+
+
+
+        public bool BadelineMode { get; set; }
+        public bool SilhouetteMode { get; set; }
+        public bool JungleLanternMode { get; set; }
 
 
 
