@@ -14,10 +14,8 @@ using Mono.Cecil.Cil;
 
 using Celeste.Mod.JungleHelper;
 
-namespace Celeste.Mod.SkinModHelper
-{
-    public class SkinModHelperModule : EverestModule
-    {
+namespace Celeste.Mod.SkinModHelper {
+    public class SkinModHelperModule : EverestModule {
         public static SkinModHelperModule Instance;
         public static readonly string DEFAULT = "Default";
         public static readonly int MAX_DASHES = 5;
@@ -36,28 +34,24 @@ namespace Celeste.Mod.SkinModHelper
         private static Hook Jungle_Hook_Update;
         private static Hook Jungle_Hook_Update_x2;
 
-        public SkinModHelperModule()
-        {
+        public SkinModHelperModule() {
             Instance = this;
             UI = new SkinModHelperUI();
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
             OtherskinConfigs = new Dictionary<string, SkinModHelperConfig>();
 
 
-            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "JungleHelper", Version = new Version(1, 0, 8) }))
-            {
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "JungleHelper", Version = new Version(1, 0, 8) })) {
                 JungleHelperInstalled = true;
             }
-            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "ExtendedVariantMode", Version = new Version(0, 22, 21) }))
-            {
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "ExtendedVariantMode", Version = new Version(0, 22, 21) })) {
                 ExtendedInstalled = true;
             }
         }
         bool ExtendedInstalled = false;
         bool JungleHelperInstalled = false;
 
-        public override void Load()
-        {
+        public override void Load() {
             SkinModHelperInterop.Load();
 
             Everest.Content.OnUpdate += EverestContentUpdateHook;
@@ -105,15 +99,12 @@ namespace Celeste.Mod.SkinModHelper
             }
         }
 
-        public override void LoadContent(bool firstLoad)
-        {
+        public override void LoadContent(bool firstLoad) {
             base.LoadContent(firstLoad);
             ReloadSettings();
-            UpdateParticles();
         }
 
-        public override void Unload()
-        {
+        public override void Unload() {
             Everest.Content.OnUpdate -= EverestContentUpdateHook;
 
             On.Celeste.Player.UpdateHair -= PlayerUpdateHairHook;
@@ -152,8 +143,7 @@ namespace Celeste.Mod.SkinModHelper
             Jungle_Hook_Update.Dispose();
             Jungle_Hook_Update_x2.Dispose();
         }
-        private static void JungleHelperInstalled_Hook()
-        {
+        private static void JungleHelperInstalled_Hook() {
             Jungle_Hook_Update = new Hook(typeof(JungleHelperModule).Assembly.GetType("Celeste.Mod.JungleHelper.Entities.EnforceSkinController").GetMethod("ChangePlayerSpriteMode", BindingFlags.Public | BindingFlags.Static),
                                                  typeof(SkinModHelperModule).GetMethod("ChangePlayerSpriteMode", BindingFlags.Public | BindingFlags.Static));
 
@@ -161,21 +151,18 @@ namespace Celeste.Mod.SkinModHelper
                                                  typeof(SkinModHelperModule).GetMethod("HasLantern", BindingFlags.Public | BindingFlags.Static));
         }
 
-        public void SpecificSprite_LoopReload()
-        {
+        public void SpecificSprite_LoopReload() {
             IL.Celeste.Player.Render -= PlayerRenderIlHook_LoopReLoad;
-            if (Player_Skinid_verify != 0)
-            {
+            if (Player_Skinid_verify != 0) {
                 IL.Celeste.Player.Render += PlayerRenderIlHook_LoopReLoad;
             }
 
+            UpdateParticles();
+
             string skinId = XmlCombineValue();
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                if (Settings.ExtraXmlList.ContainsKey(config.Options)) {
+                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null) {
                         string spritesXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Sprites.xml";
                         string portraitsXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Portraits.xml";
 
@@ -184,12 +171,9 @@ namespace Celeste.Mod.SkinModHelper
                     }
                 }
             }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (config.OtherSprite_Path != null && Player_Skinid_verify == config.SpriteModeValue)
-                    {
+            if (Player_Skinid_verify != 0) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (config.OtherSprite_Path != null && Player_Skinid_verify == config.SpriteModeValue) {
                         string spritesXmlPath = "Graphics/" + config.OtherSprite_Path + "/Sprites.xml";
                         string portraitsXmlPath = "Graphics/" + config.OtherSprite_Path + "/Portraits.xml";
 
@@ -205,13 +189,10 @@ namespace Celeste.Mod.SkinModHelper
 
 
 
-        private void on_LevelLoader_ctor(On.Celeste.LevelLoader.orig_ctor orig, LevelLoader self, Session session, Vector2? startPosition)
-        {
+        private void on_LevelLoader_ctor(On.Celeste.LevelLoader.orig_ctor orig, LevelLoader self, Session session, Vector2? startPosition) {
             orig(self, session, startPosition);
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if (config.Character_ID != null)
-                {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (config.Character_ID != null) {
                     Logger.Log(LogLevel.Info, "SkinModHelper", $"Load {config.Character_ID}'s Metadata");
                     //Metadata can is null, but Character_ID can't non-existent , 
                     PlayerSprite.CreateFramesMetadata(config.Character_ID);
@@ -220,69 +201,51 @@ namespace Celeste.Mod.SkinModHelper
         }
 
         public static bool playback = false;
-        private static void ExtendedVariant_Silhouette()
-        {
+        private static void ExtendedVariant_Silhouette() {
             //playback = ExtendedVariantsModule.Settings.MadelineIsSilhouette;
         }
 
         public static bool PlayerSelf = false;
         public static int Player_Skinid_verify;
         public static bool backpackOn = true;
-        private void on_PlayerSprite_ctor(On.Celeste.PlayerSprite.orig_ctor orig, PlayerSprite self, PlayerSpriteMode mode)
-        {
+        private void on_PlayerSprite_ctor(On.Celeste.PlayerSprite.orig_ctor orig, PlayerSprite self, PlayerSpriteMode mode) {
             Level level = Engine.Scene as Level ?? (Engine.Scene as LevelLoader)?.Level;
 
             DynData<PlayerSprite> selfData = new DynData<PlayerSprite>(self);
             bool isGhost = mode < 0;
             bool isSilhouette = false;
 
-            if (!isGhost && level != null)
-            {
+            if (!isGhost && level != null) {
                 backpackOn = Settings.Backpack == SkinModHelperSettings.BackpackMode.On ||
                     (Settings.Backpack == SkinModHelperSettings.BackpackMode.Default && level.Session.Inventory.Backpack);
             }
 
-            if (!isGhost && UniqueSkinSelected() && (mode == PlayerSpriteMode.Madeline || mode == PlayerSpriteMode.MadelineNoBackpack || mode == PlayerSpriteMode.MadelineAsBadeline))
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (config.Options == Settings.SelectedPlayerSkin)
-                    {
+            if (!isGhost && UniqueSkinSelected() && (mode == PlayerSpriteMode.Madeline || mode == PlayerSpriteMode.MadelineNoBackpack || mode == PlayerSpriteMode.MadelineAsBadeline)) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (config.Options == Settings.SelectedPlayerSkin) {
                         PlayerSelf = true;
-                        if (!backpackOn)
-                        {
+                        if (!backpackOn) {
                             mode = (PlayerSpriteMode)(config.SpriteModeValue + config.SpriteMode_NoBackPack);
-                        }
-                        else
-                        {
+                        } else {
                             mode = (PlayerSpriteMode)(config.SpriteModeValue + config.SpriteMode_hasBackPack);
                         }
                         break;
                     }
                 }
-            }
-            else if (!isGhost && UniqueSilhouetteSelected() && (mode == PlayerSpriteMode.Playback))
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (config.Options == Settings.SelectedSilhouetteSkin)
-                    {
+            } else if (!isGhost && UniqueSilhouetteSelected() && (mode == PlayerSpriteMode.Playback)) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (config.Options == Settings.SelectedSilhouetteSkin) {
                         selfData["isSilhouette"] = true;
-                        if (playback){ PlayerSelf = true;}
-                        if (!backpackOn)
-                        {
+                        if (playback) { PlayerSelf = true; }
+                        if (!backpackOn) {
                             mode = (PlayerSpriteMode)(config.SpriteModeValue + config.SpriteMode_NoBackPack);
-                        }
-                        else
-                        {
+                        } else {
                             mode = (PlayerSpriteMode)(config.SpriteModeValue + config.SpriteMode_hasBackPack);
                         }
                         break;
                     }
                 }
-            }
-            else if (isGhost)
-            {
+            } else if (isGhost) {
                 selfData["isGhost"] = true;
             }
 
@@ -290,35 +253,27 @@ namespace Celeste.Mod.SkinModHelper
             orig(self, mode);
 
 
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue)
-                {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue) {
                     string id = config.Character_ID;
                     selfData["spriteName"] = id;
                     GFX.SpriteBank.CreateOn(self, id);
                     break;
                 }
             }
-            if (PlayerSelf && !isGhost && !isSilhouette && mode != (PlayerSpriteMode)2)
-            {
+            if (PlayerSelf && !isGhost && !isSilhouette && mode != (PlayerSpriteMode)2) {
                 PlayerSelf = false;
                 Player_Skinid_verify = (int)mode;
                 SpecificSprite_LoopReload();
-                UpdateParticles();
             }
 
-            if (isGhost && selfData["spriteName"] == "")
-            {
+            if (isGhost && selfData["spriteName"] == "") {
                 Logger.Log(LogLevel.Info, "SkinModHelper", $"someone else in CelesteNet uses a Skin-Mod that you don't have");
                 string id = "player";
-                if (!level.Session.Inventory.Backpack)
-                {
+                if (!level.Session.Inventory.Backpack) {
                     id = "player_no_backpack";
                     selfData["spriteName"] = id;
-                }
-                else
-                {
+                } else {
                     id = "player";
                     selfData["spriteName"] = id;
                 }
@@ -327,18 +282,14 @@ namespace Celeste.Mod.SkinModHelper
             }
 
 
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if (config.JungleLanternMode == true && (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue))
-                {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (config.JungleLanternMode == true && (mode == (PlayerSpriteMode)config.SpriteModeValue || mode == (PlayerSpriteMode)(1 << 31) + config.SpriteModeValue)) {
                     // replay the "idle" sprite to make it apply immediately.
                     self.Play("idle", restart: true);
 
                     // when the look up animation finishes, rewind it to frame 7: this way we are getting 7-11 playing in a loop.
-                    self.OnFinish = anim =>
-                    {
-                        if (anim == "lookUp")
-                        {
+                    self.OnFinish = anim => {
+                        if (anim == "lookUp") {
                             self.Play("lookUp", restart: true);
                             self.SetAnimationFrame(5);
                         }
@@ -350,23 +301,19 @@ namespace Celeste.Mod.SkinModHelper
 
 
 
-        private static Sprite SpriteBankCreateOn(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id)
-        {
+        private static Sprite SpriteBankCreateOn(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id) {
             // Prevent mode's non-vanilla value causing the game Error
-            if (sprite is PlayerSprite && id == "")
-            {
+            if (sprite is PlayerSprite && id == "") {
                 return null;
             }
             return orig(self, sprite, id);
         }
 
 
-        private void patch_SpriteMode_Badeline(ILContext il)
-        {
+        private void patch_SpriteMode_Badeline(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<PlayerSprite>("get_Mode"))) {
-                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig => 
-                {
+                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig => {
                     foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
                         if (orig == (PlayerSpriteMode)config.SpriteModeValue && config.BadelineMode == true) {
                             return (PlayerSpriteMode)3;
@@ -376,12 +323,10 @@ namespace Celeste.Mod.SkinModHelper
                 });
             }
         }
-        private void patch_SpriteMode_Silhouette(ILContext il)
-        {
+        private void patch_SpriteMode_Silhouette(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<PlayerSprite>("get_Mode"))) {
-                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig =>
-                {
+                cursor.EmitDelegate<Func<PlayerSpriteMode, PlayerSpriteMode>>(orig => {
                     foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
                         if (orig == (PlayerSpriteMode)config.SpriteModeValue && config.SilhouetteMode == true) {
                             return (PlayerSpriteMode)4;
@@ -392,131 +337,100 @@ namespace Celeste.Mod.SkinModHelper
             }
         }
 
-        private static void on_Lookout_Interact(On.Celeste.Lookout.orig_Interact orig, Lookout self, Player player)
-        {
+        private static void on_Lookout_Interact(On.Celeste.Lookout.orig_Interact orig, Lookout self, Player player) {
             orig(self, player);
-            if (Player_Skinid_verify != 0)
-            {
+            if (Player_Skinid_verify != 0) {
                 DynData<Lookout> selfData = new DynData<Lookout>(self);
                 selfData["animPrefix"] = "";
-            }
-            else
-            {
+            } else {
                 return;
             }
         }
 
 
 
-        public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot)
-        {
+        public override void CreateModMenuSection(TextMenu menu, bool inGame, EventInstance snapshot) {
             base.CreateModMenuSection(menu, inGame, snapshot);
             UI.CreateMenu(menu, inGame);
         }
 
-        private void EverestContentUpdateHook(ModAsset oldAsset, ModAsset newAsset)
-        {
-            if (newAsset != null && newAsset.PathVirtual.StartsWith("SkinModHelperConfig"))
-            {
+        private void EverestContentUpdateHook(ModAsset oldAsset, ModAsset newAsset) {
+            if (newAsset != null && newAsset.PathVirtual.StartsWith("SkinModHelperConfig")) {
                 ReloadSettings();
             }
         }
 
-        private void ReloadSettings()
-        {
+        private void ReloadSettings() {
             skinConfigs.Clear();
             OtherskinConfigs.Clear();
             Instance.LoadSettings();
 
-            foreach (ModContent mod in Everest.Content.Mods)
-            {
+            foreach (ModContent mod in Everest.Content.Mods) {
                 List<SkinModHelperConfig> configs;
-                if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml))
-                {
+                if (mod.Map.TryGetValue("SkinModHelperConfig", out ModAsset configAsset) && configAsset.Type == typeof(AssetTypeYaml)) {
                     configs = LoadConfigFile(configAsset);
 
-                    foreach (SkinModHelperConfig config in configs)
-                    {
+                    foreach (SkinModHelperConfig config in configs) {
                         Regex skinIdRegex = new(@"^[a-zA-Z0-9]+_[a-zA-Z0-9]+$");
-                        if (config.Options == null)
-                        {
+                        if (config.Options == null) {
                             Logger.Log(LogLevel.Warn, "SkinModHelper", $"Some SkinModHelperConfig.yaml unset 'Options'?");
                             continue;
                         }
-                        if (OtherskinConfigs.ContainsKey(config.Options) || skinConfigs.ContainsKey(config.Options))
-                        {
+                        if (OtherskinConfigs.ContainsKey(config.Options) || skinConfigs.ContainsKey(config.Options)) {
                             Logger.Log(LogLevel.Warn, "SkinModHelper", $"{config.Options} appear twice in the ConfigFile, unregister the second {config.Options}");
                             continue;
                         }
-                        if (config.SpriteModeValue > 4)
-                        {
+                        if (config.SpriteModeValue > 4) {
                             bool Whether_continue = false;
-                            foreach (SkinModHelperConfig config_x2 in SkinModHelperModule.skinConfigs.Values)
-                            {
-                                if (config.SpriteModeValue == config_x2.SpriteModeValue)
-                                {
+                            foreach (SkinModHelperConfig config_x2 in SkinModHelperModule.skinConfigs.Values) {
+                                if (config.SpriteModeValue == config_x2.SpriteModeValue) {
                                     Logger.Log(LogLevel.Warn, "SkinModHelper", $"{config.Options} and {config_x2.Options} has the same SpriteModeValue, unregister the {config.Options}'s skin ID");
                                     Whether_continue = true;
                                 }
                             }
-                            if (Whether_continue)
-                            {
+                            if (Whether_continue) {
                                 continue;
                             }
                         }
 
 
-                        if (config.OtherSprite_ExPath != null)
-                        {
+                        if (config.OtherSprite_ExPath != null) {
                             OtherskinConfigs.Add(config.Options, config);
                         }
-                        if (config.Character_ID == null || config.SpriteModeValue < 5)
-                        {
+                        if (config.Character_ID == null || config.SpriteModeValue < 5) {
                             if (config.OtherSprite_ExPath == null || config.SpriteModeValue != 0) { Logger.Log(LogLevel.Warn, "SkinModHelper", $"invalid skin ID {config.Options}, will not register."); }
-                        }
-                        else
-                        {
-                            if (config.SpecificPlayerSprite_Path == null && config.Character_ID != null)
-                            {
+                        } else {
+                            if (config.SpecificPlayerSprite_Path == null && config.Character_ID != null) {
                                 config.SpecificPlayerSprite_Path = "characters/" + config.Character_ID;
                             }
 
 
                             List<bool> changed = new(new bool[MAX_DASHES + 1]);
-                            if (config.HairColors != null)
-                            {
-                                config.GeneratedHairColors = new List<Color>(new Color[MAX_DASHES + 1])
-                                {
+                            if (config.HairColors != null) {
+                                config.GeneratedHairColors = new List<Color>(new Color[MAX_DASHES + 1]) {
                                     // Default colors taken from vanilla
                                     [0] = Calc.HexToColor("44B7FF"),
                                     [1] = Calc.HexToColor("AC3232"),
                                     [2] = Calc.HexToColor("FF6DEF")
                                 };
-                                foreach (SkinModHelperConfig.HairColor hairColor in config.HairColors)
-                                {
+                                foreach (SkinModHelperConfig.HairColor hairColor in config.HairColors) {
                                     Regex hairColorRegex = new(@"^[a-fA-F0-9]{6}$");
-                                    if (hairColor.Dashes >= 0 && hairColor.Dashes <= MAX_DASHES && hairColorRegex.IsMatch(hairColor.Color))
-                                    {
+                                    if (hairColor.Dashes >= 0 && hairColor.Dashes <= MAX_DASHES && hairColorRegex.IsMatch(hairColor.Color)) {
                                         config.GeneratedHairColors[hairColor.Dashes] = Calc.HexToColor(hairColor.Color);
                                         changed[hairColor.Dashes] = true;
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         Logger.Log(LogLevel.Warn, "SkinModHelper", $"Invalid hair color or dash count values provided for {config.Options}.");
                                     }
                                 }
                             }
                             // Fill upper dash range with the last customized dash color
-                            for (int i = 3; i <= MAX_DASHES; i++)
-                            {
-                                if (!changed[i] && config.HairColors != null)
-                                {
+                            for (int i = 3; i <= MAX_DASHES; i++) {
+                                if (!changed[i] && config.HairColors != null) {
                                     config.GeneratedHairColors[i] = config.GeneratedHairColors[i - 1];
                                 }
                             }
 
-                            if (config.SpriteMode_JungleLantern_NoBackPack == 0 && config.SpriteMode_JungleLantern != 0)
-                            {
+                            if (config.SpriteMode_JungleLantern_NoBackPack == 0 && config.SpriteMode_JungleLantern != 0) {
                                 config.SpriteMode_JungleLantern_NoBackPack = config.SpriteMode_JungleLantern;
                             }
 
@@ -527,19 +441,16 @@ namespace Celeste.Mod.SkinModHelper
                 }
             }
 
-            if (Settings.SelectedPlayerSkin == null || !skinConfigs.ContainsKey(Settings.SelectedPlayerSkin))
-            {
+            if (Settings.SelectedPlayerSkin == null || !skinConfigs.ContainsKey(Settings.SelectedPlayerSkin)) {
                 Settings.SelectedPlayerSkin = DEFAULT;
             }
-            if (Settings.SelectedSilhouetteSkin == null || !skinConfigs.ContainsKey(Settings.SelectedSilhouetteSkin))
-            {
+            if (Settings.SelectedSilhouetteSkin == null || !skinConfigs.ContainsKey(Settings.SelectedSilhouetteSkin)) {
                 Settings.SelectedSilhouetteSkin = DEFAULT;
             }
         }
 
 
-        private static List<SkinModHelperConfig> LoadConfigFile(ModAsset skinConfigYaml)
-        {
+        private static List<SkinModHelperConfig> LoadConfigFile(ModAsset skinConfigYaml) {
             return skinConfigYaml.Deserialize<List<SkinModHelperConfig>>();
         }
 
@@ -548,41 +459,32 @@ namespace Celeste.Mod.SkinModHelper
 
 
         // ---Custom ColorGrade---
-        private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self)
-        {
+        private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self) {
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
             bool MaxDashZero = self.MaxDashes <= 0;
 
-            if (!MaxDashZero)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if ((self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null)
-                    {
-                        while (dashCount > 2 && !GFX.ColorGrades.Has(config.colorGrade_Path + "/dash" + dashCount))
-                        {
+            if (!MaxDashZero) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if ((self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue) && config.colorGrade_Path != null) {
+                        while (dashCount > 2 && !GFX.ColorGrades.Has(config.colorGrade_Path + "/dash" + dashCount)) {
                             dashCount--;
                         }
                         new DynData<PlayerSprite>(self.Sprite)["DashCount"] = dashCount;
                     }
                 }
-            }
-            else 
-            { 
-                new DynData<PlayerSprite>(self.Sprite)["DashCount"] = 1; 
+            } else {
+                new DynData<PlayerSprite>(self.Sprite)["DashCount"] = 1;
             }
             orig(self);
         }
 
-        private void PlayerDeadBodyRenderHook(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self)
-        {
+        private void PlayerDeadBodyRenderHook(On.Celeste.PlayerDeadBody.orig_Render orig, PlayerDeadBody self) {
             PlayerSprite sprite = new DynData<PlayerDeadBody>(self).Get<PlayerSprite>("sprite");
             new DynData<PlayerSprite>(sprite)["DashCount"] = 1;
             orig(self);
         }
 
-        private void OnPlayerSpriteRender(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self)
-        {
+        private void OnPlayerSpriteRender(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self) {
             orig(self);
             DynData<PlayerSprite> selfData = new DynData<PlayerSprite>(self);
             if ((selfData.Get<int?>("DashCount") == null) && (selfData.Get<bool?>("isGhost") != true) && (selfData.Get<bool?>("isSilhouette") != true)) {
@@ -619,14 +521,13 @@ namespace Celeste.Mod.SkinModHelper
         }
 
         // ---Custom Dash Color---
-        private void PlayerUpdateHairHook(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity)
-        {
+        private void PlayerUpdateHairHook(On.Celeste.Player.orig_UpdateHair orig, Player self, bool applyGravity) {
             orig(self, applyGravity);
 
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
             bool MaxDashZero = self.MaxDashes <= 0;
 
-            List <Color> GeneratedHairColors = null;
+            List<Color> GeneratedHairColors = null;
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
                 if (self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.HairColors != null) {
                     GeneratedHairColors = config.GeneratedHairColors;
@@ -636,15 +537,13 @@ namespace Celeste.Mod.SkinModHelper
             if (self.StateMachine.State != Player.StStarFly && self.Hair.Color != Color.White && GeneratedHairColors != null) {
                 if (MaxDashZero) {
                     self.Hair.Color = GeneratedHairColors[1];
-                }
-                else {
+                } else {
                     self.Hair.Color = GeneratedHairColors[dashCount];
                 }
             }
         }
 
-        private Color PlayerGetTrailColorHook(On.Celeste.Player.orig_GetTrailColor orig, Player self, bool wasDashB)
-        {
+        private Color PlayerGetTrailColorHook(On.Celeste.Player.orig_GetTrailColor orig, Player self, bool wasDashB) {
             int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
@@ -655,13 +554,12 @@ namespace Celeste.Mod.SkinModHelper
             return orig(self, wasDashB);
         }
 
-        private void PlayerRenderIlHook(ILContext il)
-        {
+
+        private void PlayerRenderIlHook(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
             // jump to the usage of the Red color
-            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_Red")))
-            {
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_Red"))) {
                 Logger.Log("SkinModHelper", $"Patching silhouette hair color at {cursor.Index} in IL code for Player.Render()");
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate<Func<Color, Player, Color>>((color, player) => {
@@ -679,8 +577,7 @@ namespace Celeste.Mod.SkinModHelper
             }
 
             // jump to the usage of the White-color / Null-color
-            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
-            {
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                 Logger.Log("SkinModHelper", $"Patching silhouette color at {cursor.Index} in IL code for Player.Render()");
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitDelegate<Func<Color, Player, Color>>((orig, self) => {
@@ -697,131 +594,56 @@ namespace Celeste.Mod.SkinModHelper
 
 
         // ---Specific Player Sprite---
-        private void PlayerRenderIlHook_LoopReLoad(ILContext il)
-        {
+        private void PlayerRenderIlHook_LoopReLoad(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/startStarFlyWhite")))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/startStarFlyWhite"))) {
                 Logger.Log("SkinModHelper", $"Changing startStarFlyWhite path at {cursor.Index} in CIL code for {cursor.Method.FullName}");
-                cursor.EmitDelegate<Func<string, string>>((orig) =>
-                {
-                    string CustomPath = null;
-                    foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-                    {
-                        if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                        {
-                            if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                            {
-                                if (GFX.Game.Has(config.OtherSprite_ExPath + "/startStarFlyWhite00"))
-                                {
-                                    CustomPath = config.OtherSprite_ExPath + "/startStarFlyWhite";
-                                }
-                            }
-                        }
-                    }
-                    if (Player_Skinid_verify != 0)
-                    {
-                        foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                        {
-                            if (Player_Skinid_verify == config.SpriteModeValue && config.SpecificPlayerSprite_Path != null)
-                            {
-                                if (GFX.Game.Has(config.SpecificPlayerSprite_Path + "/startStarFlyWhite00"))
-                                {
-                                    CustomPath = config.SpecificPlayerSprite_Path + "/startStarFlyWhite";
-                                }
-                            }
-                        }
-                    }
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
 
-                    if (CustomPath != null)
-                    {
+                    string CustomPath = GetReskinPath("startStarFlyWhite", "00", Player_Skinid_verify, true, false, true);
+                    if (CustomPath != "startStarFlyWhite") {
                         return CustomPath;
                     }
                     return orig;
                 });
             }
         }
-        private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index)
-        {
-            string bangs = null;
-            string hair = null;
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if (self.Sprite.Mode == (PlayerSpriteMode)2 && config.OtherSprite_Path != null && Player_Skinid_verify == config.SpriteModeValue)
-                {
-                    if (index == 0 && GFX.Game.Has(config.OtherSprite_Path + "/bangs00"))
-                    {
-                        bangs = config.OtherSprite_Path + "/badeline_bangs";
-                    }
-                    else if(GFX.Game.Has(config.OtherSprite_Path + "/hair00"))
-                    {
-                        hair = config.OtherSprite_Path + "/badeline_hair00";
-                    }
+
+        private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index) {
+            string bangs = "bangs";
+            string hair = "hair00";
+
+            if (self.Sprite.Mode == (PlayerSpriteMode)2) {
+                if (index == 0) {
+                    bangs = GetReskinPath("badeline_bangs", "00", Player_Skinid_verify, false, true, false);
+                } else {
+                    hair = GetReskinPath("badeline_hair00", null, Player_Skinid_verify, false, true, false);
                 }
-                else if (self.Sprite.Mode == (PlayerSpriteMode)config.SpriteModeValue && config.SpecificPlayerSprite_Path != null)
-                {
-                    if (index == 0 && GFX.Game.Has(config.SpecificPlayerSprite_Path + "/bangs00"))
-                    {
-                        bangs = config.SpecificPlayerSprite_Path + "/bangs";
-                    }
-                    else if (GFX.Game.Has(config.SpecificPlayerSprite_Path + "/hair00"))
-                    {
-                        hair = config.SpecificPlayerSprite_Path + "/hair00";
-                    }
+            } else {
+                if (index == 0) {
+                    bangs = GetReskinPath("bangs", "00", (int)self.Sprite.Mode, true, false, false);
+                } else {
+                    hair = GetReskinPath("hair00", null, (int)self.Sprite.Mode, true, false, false);
                 }
             }
 
 
-            if (index == 0 && bangs != null)
-            {
+            if (index == 0 && bangs != "bangs" && bangs != "badeline_bangs") {
                 List<MTexture> CustomBangs = GFX.Game.GetAtlasSubtextures(bangs);
                 return CustomBangs.Count > self.Sprite.HairFrame ? CustomBangs[self.Sprite.HairFrame] : CustomBangs[0];
-            }
-            else if (hair != null)
-            {
+            } else if (index != 0 && hair != "hair00" && hair != "badeline_hair00") {
                 return GFX.Game[hair];
             }
 
             return orig(self, index);
         }
 
-        private void DeathEffectDrawHook(ILContext il)
-        {
+        private void DeathEffectDrawHook(ILContext il) {
             ILCursor cursor = new(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/hair00")))
-            {
-                cursor.EmitDelegate<Func<string, string>>((orig) =>
-                {
-                    string CustomPath = null;
-                    foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-                    {
-                        if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                        {
-                            if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                            {
-                                if (GFX.Game.Has(config.OtherSprite_ExPath + "/death_particle"))
-                                {
-                                    CustomPath = config.OtherSprite_ExPath + "/death_particle";
-                                }
-                            }
-                        }
-                    }
-                    if (Player_Skinid_verify != 0)
-                    {
-                        foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                        {
-                            if (Player_Skinid_verify == config.SpriteModeValue && config.SpecificPlayerSprite_Path != null)
-                            {
-                                if (GFX.Game.Has(config.SpecificPlayerSprite_Path + "/death_particle"))
-                                {
-                                    CustomPath = config.SpecificPlayerSprite_Path + "/death_particle";
-                                }
-                            }
-                        }
-                    }
-
-                    if (CustomPath != null)
-                    {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("characters/player/hair00"))) {
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    string CustomPath = GetReskinPath("death_particle", null, Player_Skinid_verify, true, false, true);
+                    if (CustomPath != "death_particle") {
                         return CustomPath;
                     }
                     return orig;
@@ -835,49 +657,38 @@ namespace Celeste.Mod.SkinModHelper
 
 
         //---Other Sprite---
-        private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id)
-        {
+        private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id) {
             string newId = id + "_" + XmlCombineValue();
-            if (self.SpriteData.ContainsKey(newId))
-            {
+            if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
             return orig(self, sprite, id);
         }
 
-        private Sprite SpriteBankCreateHook(On.Monocle.SpriteBank.orig_Create orig, SpriteBank self, string id)
-        {
+        private Sprite SpriteBankCreateHook(On.Monocle.SpriteBank.orig_Create orig, SpriteBank self, string id) {
             string newId = id + "_" + XmlCombineValue();
-            if (self.SpriteData.ContainsKey(newId))
-            {
+            if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
             return orig(self, id);
         }
 
         // We only need this for file select : )
-        private void GameLoaderLoadThreadHook(On.Celeste.GameLoader.orig_LoadThread orig, GameLoader self)
-        {
+        private void GameLoaderLoadThreadHook(On.Celeste.GameLoader.orig_LoadThread orig, GameLoader self) {
             orig(self);
             string skinId = XmlCombineValue();
 
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                if (Settings.ExtraXmlList.ContainsKey(config.Options)) {
+                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null) {
                         string portraitsXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Portraits.xml";
                         CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
                     }
                 }
             }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null)
-                    {
+            if (Player_Skinid_verify != 0) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null) {
                         string portraitsXmlPath = "Graphics/" + config.OtherSprite_Path + "/Portraits.xml";
                         CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
                     }
@@ -886,106 +697,58 @@ namespace Celeste.Mod.SkinModHelper
         }
 
         // Wait until the main sprite bank is created, then combine with our skin mod banks
-        private void LevelLoaderLoadingThreadHook(On.Celeste.LevelLoader.orig_LoadingThread orig, LevelLoader self)
-        {            
-            if (Settings.Backpack != SkinModHelperSettings.BackpackMode.Default)
-            {
+        private void LevelLoaderLoadingThreadHook(On.Celeste.LevelLoader.orig_LoadingThread orig, LevelLoader self) {
+            if (Settings.Backpack != SkinModHelperSettings.BackpackMode.Default) {
                 //at this Hooking time, The level data has not established, cannot get Default backpack state of Level 
                 backpackOn = Settings.Backpack != SkinModHelperSettings.BackpackMode.Off;
             }
 
-            if (UniqueSkinSelected())
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (config.Options == Settings.SelectedPlayerSkin)
-                    {
+            if (UniqueSkinSelected()) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (config.Options == Settings.SelectedPlayerSkin) {
                         PlayerSelf = true;
-                        if (!backpackOn)
-                        {
+                        if (!backpackOn) {
                             Player_Skinid_verify = (config.SpriteModeValue + config.SpriteMode_NoBackPack);
-                        }
-                        else
-                        {
+                        } else {
                             Player_Skinid_verify = (config.SpriteModeValue + config.SpriteMode_hasBackPack);
                         }
                     }
                 }
             }
 
-
+            SpecificSprite_LoopReload();
             string skinId = XmlCombineValue();
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
-                        string spritesXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Sprites.xml";
-                        string portraitsXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Portraits.xml";
-
-                        CombineSpriteBanks(GFX.SpriteBank, skinId, spritesXmlPath);
-                        CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
-                    }
-                }
-            }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null)
-                    {
-                        string spritesXmlPath = "Graphics/" + config.OtherSprite_Path + "/Sprites.xml";
-                        string portraitsXmlPath = "Graphics/" + config.OtherSprite_Path + "/Portraits.xml";
-
-                        CombineSpriteBanks(GFX.SpriteBank, skinId, spritesXmlPath);
-                        CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
-                    }
-                }
-            }
             orig(self);
         }
 
 
-        private static string XmlCombineValue()
-        {
+        private static string XmlCombineValue() {
             int sort = 0;
             string identifier = "";
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && sort == 0)
-                    {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                if (Settings.ExtraXmlList.ContainsKey(config.Options)) {
+                    if (Settings.ExtraXmlList[config.Options] && sort == 0) {
                         identifier = (sort + "_" + config.Options);
                         sort += 1;
-                    }
-                    else if (Settings.ExtraXmlList[config.Options])
-                    {
+                    } else if (Settings.ExtraXmlList[config.Options]) {
                         identifier = (identifier + ", " + sort + "_" + config.Options);
                         sort += 1;
                     }
                 }
             }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && sort == 0)
-                    {
+            if (Player_Skinid_verify != 0) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (Player_Skinid_verify == config.SpriteModeValue && sort == 0) {
                         identifier = (sort + "_" + Player_Skinid_verify);
                         sort += 1;
-                    }
-                    else if (Player_Skinid_verify == config.SpriteModeValue)
-                    {
+                    } else if (Player_Skinid_verify == config.SpriteModeValue) {
                         identifier = (identifier + ", " + sort + "_" + Player_Skinid_verify);
                         sort += 1;
                     }
                 }
             }
 
-            if (identifier != "")
-            {
+            if (identifier != "") {
                 //Logger.Log(LogLevel.Verbose, "SkinModHelper", $"SpriteBank identifier: {identifier}");
                 return identifier;
             }
@@ -995,104 +758,73 @@ namespace Celeste.Mod.SkinModHelper
 
 
 
-        private static void UpdateParticles()
-        {
+        private static void UpdateParticles() {
             FlyFeather.P_Collect.Source = GFX.Game["particles/feather"];
             FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
 
             string CustomPath = null;
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
-                        if (GFX.Game.Has(config.OtherSprite_ExPath + "/particles/feather"))
-                        {
-                            CustomPath = config.OtherSprite_ExPath + "/particles/feather";
-                        }
-                    }
-                }
-            }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null)
-                    {
-                        if (GFX.Game.Has(config.OtherSprite_Path + "/particles/feather"))
-                        {
-                            CustomPath = config.OtherSprite_Path + "/particles/feather";
-                        }
-                    }
-                }
-            }
+            CustomPath = GetReskinPath("particles/feather", null, Player_Skinid_verify, false, true, true);
 
-            if (CustomPath != null)
-            {
+            if (CustomPath != null) {
                 FlyFeather.P_Collect.Source = GFX.Game[CustomPath];
                 FlyFeather.P_Boost.Source = GFX.Game[CustomPath];
             }
         }
 
 
-        private void DreamBlockHook(ILContext il)
-        {
+        private void DreamBlockHook(ILContext il) {
             ILCursor cursor = new(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/dreamblock/particles")))
-            {
-                cursor.EmitDelegate<Func<string, string>>((orig) =>
-                {
-                    return GetReskinPath("objects/dreamblock/particles");
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/dreamblock/particles"))) {
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return GetReskinPath("objects/dreamblock/particles", null, Player_Skinid_verify, false, true, true);
                 });
             }
         }
 
-        private void FlyFeatherHook(ILContext il)
-        {
+        private void FlyFeatherHook(ILContext il) {
             ILCursor cursor = new(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/flyFeather/outline")))
-            {
-                cursor.EmitDelegate<Func<string, string>>((orig) =>
-                {
-                    return GetReskinPath("objects/flyFeather/outline");
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("objects/flyFeather/outline"))) {
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
+                    return GetReskinPath("objects/flyFeather/outline", null, Player_Skinid_verify, false, true, true);
                 });
             }
         }
 
-        private static string GetReskinPath(string orig)
-        {
-            string CustomPath = null;
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
-                        if (GFX.Game.Has(config.OtherSprite_ExPath + "/" + orig))
-                        {
-                            CustomPath = config.OtherSprite_ExPath + "/" + orig;
+
+
+        private static string GetReskinPath(string orig, string Sprtie_Number, int mode, bool S_Path, bool N_Path, bool Ex_Path) {
+
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (mode == config.SpriteModeValue) {
+
+                    if (S_Path && config.SpecificPlayerSprite_Path != null) {
+                        if (GFX.Game.Has(config.SpecificPlayerSprite_Path + "/" + orig + Sprtie_Number)) {
+                            return config.SpecificPlayerSprite_Path + "/" + orig;
                         }
                     }
-                }
-            }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null)
-                    {
-                        if (GFX.Game.Has(config.OtherSprite_Path + "/" + orig))
-                        {
-                            CustomPath = config.OtherSprite_Path + "/" + orig;
+
+                    if (N_Path && config.OtherSprite_Path != null) {
+                        if (GFX.Game.Has(config.OtherSprite_Path + "/" + orig + Sprtie_Number)) {
+                            return config.OtherSprite_Path + "/" + orig;
                         }
                     }
                 }
             }
 
-            if (CustomPath != null)
-            {
-                return GFX.Game.Has(CustomPath) ? CustomPath : orig;
+            if (Ex_Path) {
+                string CustomPath = null;
+                foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                    if (Settings.ExtraXmlList.ContainsKey(config.Options)) {
+                        if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null) {
+                            if (GFX.Game.Has(config.OtherSprite_ExPath + "/" + orig + Sprtie_Number)) {
+                                CustomPath = config.OtherSprite_ExPath + "/" + orig;
+                            }
+                        }
+                    }
+                }
+                if (CustomPath != null) {
+                    return GFX.Game.Has(CustomPath + Sprtie_Number) ? CustomPath : orig;
+                }
             }
             return orig;
         }
@@ -1100,55 +832,43 @@ namespace Celeste.Mod.SkinModHelper
 
 
 
-        private void SwapTextboxHook(ILContext il)
-        {
+        private void SwapTextboxHook(ILContext il) {
             ILCursor cursor = new(il);
             // Move to the last occurence of this
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>())) {
             }
             // Make sure nothing went wrong
-            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
-            {
-                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) =>
-                {
+            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true) {
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) => {
                     return ReplacePortraitPath(orig);
                 });
             }
         }
 
         // This one requires double hook - for some reason they implemented a tiny version of the Textbox class that behaves differently
-        private void CampfireQuestionHook(ILContext il)
-        {
+        private void CampfireQuestionHook(ILContext il) {
             ILCursor cursor = new(il);
             // Move to the last occurrence of this
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>()))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchIsinst<FancyText.Portrait>())) {
             }
             // Make sure nothing went wrong
-            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true)
-            {
-                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) =>
-                {
+            if (cursor.Prev?.MatchIsinst<FancyText.Portrait>() == true) {
+                cursor.EmitDelegate<Func<FancyText.Portrait, FancyText.Portrait>>((orig) => {
                     return ReplacePortraitPath(orig);
                 });
             }
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("_ask"),
-                instr => instr.MatchCall(out MethodReference method) && method.Name == "Concat"))
-            {
-                cursor.EmitDelegate<Func<string, string>>((orig) =>
-                {
+                instr => instr.MatchCall(out MethodReference method) && method.Name == "Concat")) {
+                cursor.EmitDelegate<Func<string, string>>((orig) => {
                     return ReplaceTextboxPath(orig);
                 });
             }
         }
 
-        private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait)
-        {
+        private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait) {
             string skinModPortraitSpriteId = portrait.SpriteId + "_" + XmlCombineValue();
-            if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId))
-            {
+            if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId)) {
                 portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
             }
 
@@ -1156,32 +876,23 @@ namespace Celeste.Mod.SkinModHelper
         }
 
         // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
-        private static string ReplaceTextboxPath(string textboxPath)
-        {
+        private static string ReplaceTextboxPath(string textboxPath) {
             string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
 
             string CustomPath = null;
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
-            {
-                if (Settings.ExtraXmlList.ContainsKey(config.Options))
-                {
-                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null)
-                    {
-                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_ExPath + "/" + originalPortraitId + "_ask"))
-                        {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                if (Settings.ExtraXmlList.ContainsKey(config.Options)) {
+                    if (Settings.ExtraXmlList[config.Options] && config.OtherSprite_ExPath != null) {
+                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_ExPath + "/" + originalPortraitId + "_ask")) {
                             CustomPath = config.OtherSprite_ExPath;
                         }
                     }
                 }
             }
-            if (Player_Skinid_verify != 0)
-            {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                {
-                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null)
-                    {
-                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_Path + "/" + originalPortraitId + "_ask"))
-                        {
+            if (Player_Skinid_verify != 0) {
+                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                    if (Player_Skinid_verify == config.SpriteModeValue && config.OtherSprite_Path != null) {
+                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_Path + "/" + originalPortraitId + "_ask")) {
                             CustomPath = config.OtherSprite_Path;
                         }
                     }
@@ -1195,22 +906,18 @@ namespace Celeste.Mod.SkinModHelper
 
 
         // Combine skin mod XML with a vanilla sprite bank
-        private void CombineSpriteBanks(SpriteBank origBank, string skinId, string xmlPath)
-        {
+        private void CombineSpriteBanks(SpriteBank origBank, string skinId, string xmlPath) {
             SpriteBank newBank = BuildBank(origBank, xmlPath);
-            if (newBank == null)
-            {
+            if (newBank == null) {
                 return;
             }
 
             // For each overridden sprite, patch it and add it to the original bank with a unique identifier
-            foreach (KeyValuePair<string, SpriteData> spriteDataEntry in newBank.SpriteData)
-            {
+            foreach (KeyValuePair<string, SpriteData> spriteDataEntry in newBank.SpriteData) {
                 string spriteId = spriteDataEntry.Key;
                 SpriteData newSpriteData = spriteDataEntry.Value;
 
-                if (origBank.SpriteData.TryGetValue(spriteId, out SpriteData origSpriteData))
-                {
+                if (origBank.SpriteData.TryGetValue(spriteId, out SpriteData origSpriteData)) {
                     PatchSprite(origSpriteData.Sprite, newSpriteData.Sprite);
 
                     string newSpriteId = spriteId + "_" + skinId;
@@ -1220,34 +927,27 @@ namespace Celeste.Mod.SkinModHelper
         }
 
 
-        private SpriteBank BuildBank(SpriteBank origBank, string xmlPath)
-        {
-            try
-            {
+        private SpriteBank BuildBank(SpriteBank origBank, string xmlPath) {
+            try {
                 SpriteBank newBank = new(origBank.Atlas, xmlPath);
                 Logger.Log(LogLevel.Verbose, "SkinModHelper", $"Built sprite bank for {xmlPath}.");
                 return newBank;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Logger.Log(LogLevel.Warn, "SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
                 return null;
             }
         }
 
         // Add any missing vanilla animations to an overridden sprite
-        private void PatchSprite(Sprite origSprite, Sprite newSprite)
-        {
+        private void PatchSprite(Sprite origSprite, Sprite newSprite) {
             Dictionary<string, Sprite.Animation> newAnims = newSprite.GetAnimations();
 
             // Shallow copy... sometimes new animations get added mid-update?
             Dictionary<string, Sprite.Animation> oldAnims = new(origSprite.GetAnimations());
-            foreach (KeyValuePair<string, Sprite.Animation> animEntry in oldAnims)
-            {
+            foreach (KeyValuePair<string, Sprite.Animation> animEntry in oldAnims) {
                 string origAnimId = animEntry.Key;
                 Sprite.Animation origAnim = animEntry.Value;
-                if (!newAnims.ContainsKey(origAnimId))
-                {
+                if (!newAnims.ContainsKey(origAnimId)) {
                     newAnims[origAnimId] = origAnim;
                 }
             }
@@ -1257,31 +957,23 @@ namespace Celeste.Mod.SkinModHelper
 
 
         static bool RefreshXml = false;
-        public static void RefreshExtraXml()
-        {
-            if (RefreshXml)
-            {
+        public static void RefreshExtraXml() {
+            if (RefreshXml) {
                 RefreshPlayerSpriteMode();
             }
         }
-        public static void RefreshPlayerSpriteMode()
-        {
-            if (Engine.Scene is not Level)
-            {
+        public static void RefreshPlayerSpriteMode() {
+            if (Engine.Scene is not Level) {
                 return;
             }
             Player player = Engine.Scene.Tracker?.GetEntity<Player>();
-            if (player == null)
-            {
+            if (player == null) {
                 return;
             }
 
-            if (SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline)
-            {
+            if (SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline) {
                 SetPlayerSpriteMode(PlayerSpriteMode.MadelineAsBadeline);
-            }
-            else
-            {
+            } else {
                 SetPlayerSpriteMode(null);
             }
         }
@@ -1291,28 +983,23 @@ namespace Celeste.Mod.SkinModHelper
 
 
         // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
-        public static void UpdateSkin(string newSkinId)
-        {
+        public static void UpdateSkin(string newSkinId) {
             Settings.SelectedPlayerSkin = newSkinId;
             RefreshPlayerSpriteMode();
         }
-        public static void UpdateSilhouetteSkin(string newSkinId)
-        {
+        public static void UpdateSilhouetteSkin(string newSkinId) {
             Settings.SelectedSilhouetteSkin = newSkinId;
         }
-        public static void UpdateExtraXml(string SkinId, bool OnOff)
-        {
+        public static void UpdateExtraXml(string SkinId, bool OnOff) {
             Settings.ExtraXmlList[SkinId] = OnOff;
             RefreshXml = true;
         }
 
 
-        public static bool UniqueSkinSelected()
-        {
+        public static bool UniqueSkinSelected() {
             return Settings.SelectedPlayerSkin != null && Settings.SelectedPlayerSkin != DEFAULT;
         }
-        public static bool UniqueSilhouetteSelected()
-        {
+        public static bool UniqueSilhouetteSelected() {
             return Settings.SelectedSilhouetteSkin != null && Settings.SelectedSilhouetteSkin != DEFAULT;
         }
 
@@ -1326,25 +1013,18 @@ namespace Celeste.Mod.SkinModHelper
 
 
 
-        public static void SetPlayerSpriteMode(PlayerSpriteMode? mode)
-        {
-            if (Engine.Scene is Level level)
-            {
+        public static void SetPlayerSpriteMode(PlayerSpriteMode? mode) {
+            if (Engine.Scene is Level level) {
                 Player player = level.Tracker.GetEntity<Player>();
-                if (player != null)
-                {
+                if (player != null) {
                     PlayerSelf = true;
                     Player_Skinid_verify = 0;
-                    if (mode == null)
-                    {
+                    if (mode == null) {
                         mode = player.DefaultSpriteMode;
                     }
-                    if (player.Active)
-                    {
+                    if (player.Active) {
                         player.ResetSpriteNextFrame((PlayerSpriteMode)mode);
-                    }
-                    else
-                    {
+                    } else {
                         player.ResetSprite((PlayerSpriteMode)mode);
                     }
                 }
@@ -1356,12 +1036,9 @@ namespace Celeste.Mod.SkinModHelper
 
 
         // ---JungleHelper---
-        public static bool HasLantern(PlayerSpriteMode mode)
-        {
-            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-            {
-                if (config.JungleLanternMode == true && mode == (PlayerSpriteMode)config.SpriteModeValue)
-                {
+        public static bool HasLantern(PlayerSpriteMode mode) {
+            foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                if (config.JungleLanternMode == true && mode == (PlayerSpriteMode)config.SpriteModeValue) {
                     return true;
                 }
             }
@@ -1369,52 +1046,37 @@ namespace Celeste.Mod.SkinModHelper
         }
 
 
-        public static void ChangePlayerSpriteMode(Player player, bool hasLantern)
-        {
-            if (Engine.Scene is not Level)
-            {
+        public static void ChangePlayerSpriteMode(Player player, bool hasLantern) {
+            if (Engine.Scene is not Level) {
                 return;
             }
             player = Engine.Scene.Tracker?.GetEntity<Player>();
-            if (player == null)
-            {
+            if (player == null) {
                 return;
             }
 
-            if (!hasLantern)
-            {
-                if (SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline)
-                {
+            if (!hasLantern) {
+                if (SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline) {
                     SetPlayerSpriteMode(PlayerSpriteMode.MadelineAsBadeline);
-                }
-                else
-                {
+                } else {
                     SetPlayerSpriteMode(null);
                 }
-            }
-            else if (hasLantern)
-            {
+            } 
+            else if (hasLantern) {
                 PlayerSpriteMode mode = (PlayerSpriteMode)444482;
-                if (UniqueSkinSelected())
-                {
-                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
-                    {
-                        if (config.SpriteMode_JungleLantern != 0 && config.Options == Settings.SelectedPlayerSkin)
-                        {
-                            if (!backpackOn)
-                            {
+                if (UniqueSkinSelected()) {
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (config.SpriteMode_JungleLantern != 0 && config.Options == Settings.SelectedPlayerSkin) {
+                            if (!backpackOn) {
                                 mode = (PlayerSpriteMode)config.SpriteModeValue + config.SpriteMode_JungleLantern_NoBackPack;
-                            }
-                            else
-                            {
+                            } else {
                                 mode = (PlayerSpriteMode)config.SpriteModeValue + config.SpriteMode_JungleLantern;
                             }
                             break;
                         }
                     }
                 }
-                if (mode == (PlayerSpriteMode)444482 && SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline)
-                {
+                if (mode == (PlayerSpriteMode)444482 && SaveData.Instance != null && SaveData.Instance.Assists.PlayAsBadeline) {
                     mode = (PlayerSpriteMode)444483;
                 }
                 SetPlayerSpriteMode(mode);
