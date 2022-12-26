@@ -4,16 +4,11 @@ using Monocle;
 using YamlDotNet.Serialization;
 
 namespace Celeste.Mod.SkinModHelper {
-    public class SkinModHelperConfig
-    {
+    public class SkinModHelperConfig {
         public string Options { get; set; }
         public bool Player_List { get; set; }
         public bool Silhouette_List { get; set; }
 
-
-
-        public int SpriteModeValue { get; set; }
-        public string Character_ID { get; set; }
 
 
 
@@ -23,10 +18,9 @@ namespace Celeste.Mod.SkinModHelper {
 
 
 
-        public int SpriteMode_hasBackPack { get; set; }
-        public int SpriteMode_NoBackPack { get; set; }
-        public int SpriteMode_JungleLantern { get; set; }
-        public int SpriteMode_JungleLantern_NoBackPack { get; set; }
+
+        public string Character_ID { get; set; }
+
 
 
 
@@ -37,12 +31,18 @@ namespace Celeste.Mod.SkinModHelper {
 
 
 
+
         public List<HairColor> HairColors { get; set; }
-        public class HairColor
-        {
+        public class HairColor {
             public int Dashes { get; set; }
             public string Color { get; set; }
         }
         public List<Color> GeneratedHairColors { get; set; }
+
+
+
+
+        public string hashSeed { get; set; }
+        public List<int> hashValues { get; set; }
     }
 }

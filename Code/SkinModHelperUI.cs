@@ -93,7 +93,6 @@ namespace Celeste.Mod.SkinModHelper
 
                     subMenu.Add(Options);
                 }
-                SkinModHelperModule.RefreshExtraXml();
             });
         }
     }

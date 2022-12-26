@@ -6,14 +6,12 @@ namespace Celeste.Mod.SkinModHelper {
     [SettingName("SKIN_MOD_HELPER_SETTINGS_TITLE")]
     public class SkinModHelperSettings : EverestModuleSettings {
 
-        public enum BackpackMode {Default,Off,On}
-
+        public enum BackpackMode { Default, Off, On }
         private BackpackMode backpack = BackpackMode.Default;
-        public BackpackMode Backpack
-        {
+
+        public BackpackMode Backpack {
             get => backpack;
-            set
-            {
+            set {
                 backpack = value;
                 SkinModHelperModule.RefreshPlayerSpriteMode();
             }
@@ -40,13 +38,7 @@ namespace Celeste.Mod.SkinModHelper {
 
 
 
-
-
-
-
-
-        public void CreateBackpackEntry(TextMenu textMenu, bool inGame)
-        {
+        public void CreateBackpackEntry(TextMenu textMenu, bool inGame) {
             Array enumValues = Enum.GetValues(typeof(BackpackMode));
             Array.Sort((int[])enumValues);
             TextMenu.Item item = new TextMenu.Slider("SkinModHelper_options_Backpack".DialogClean(),

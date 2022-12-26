@@ -1,5 +1,5 @@
 
----About the settable content of the new Config---
+###---About the settable content of the new Config---###
 
 {Options}: the same as the old "SkinID", is Required
 
@@ -10,7 +10,7 @@
 
 
 {Character_ID}: Set your custom skin ID here, that ID must exist in "YourMod/Graphics/Sprite.xml", and will be used by the player
-{SpriteModeValue}: Bind data such as a skin ID to this {SpriteModeValue}, it needs to be a unique number not less than 5
+
 
 
 {SpecificPlayerSprite_Path}: Set custom "bangs, hair, death_particles"etc sprites's root directory Path
@@ -22,13 +22,7 @@
 
 
 
-{SpriteMode_hasBackPack}: Depending on your "backpack options", "{SpriteModeValue} / cardinality" will 
-                                           combine with this to get a new number, and then finally determine you get custom skin ID, can be set without
-{SpriteMode_NoBackPack}: same as "{SpriteMode_hasBackPack}"
 
-{SpriteMode_JungleLantern}: If your mod doesn't need to be compatible with the "JungleHelper", then you don't need to set this
-                                            When you lift the lantern, "{SpriteModeValue} / cardinality" will be combined with this number
-{SpriteMode_JungleLantern_NoBackPack}: No need for extra explanation
 
 
 
@@ -45,12 +39,49 @@
 
 
 
+{hashSeed}: Here you can set a "hashSeed", SkinModHelper will based this to compatible with CelesteNet
+                  same "hashSeed" should not appear two time in ConfigFlie
+                  Default value is "{Options}"
 
 
 
 
 
----About SkinModHelperConfig.yaml---
+
+
+
+
+
+
+
+
+###---special link of Config---###
+If: exist "{Options} + _NB" in your ConfigFile, 
+so: When the player is no_backpack state, 
+     your custom skin will auto-jump to custom skins that from "{Options} + _NB"
+
+#There are other similar things, they as follows:
+#  "{Options} + _NB"
+#  "{Options} + _lantern" 
+            If: you want to reskin JungleHelper some unique content that About Player, 
+            then: you need use this to jump
+#  "{Options} + _lantern_NB"
+
+
+
+
+
+
+
+
+
+
+
+
+###---About SkinModHelperConfig.yaml---###
+
+#  The following content can be copied directly into your ConfigFlie for test
+
 - Options: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
 
@@ -62,21 +93,17 @@
   Player_List: true
   Silhouette_List: false
 
-  SpriteModeValue: 123456789
   Character_ID: "player"
   SpecificPlayerSprite_Path: "SkinTest/TestA"
   OtherSprite_Path: "SkinTest/TestA"
 
-  SpriteMode_hasBackPack: 0
-  SpriteMode_NoBackPack: 1
 
 
 
 
-- Options: "gfdljoijog_x2"
+- Options: "gfdljoijog_NB"
 
   BadelineMode: true
-  SpriteModeValue: 123456790
   Character_ID: "player_no_backpack"
 
 
@@ -88,11 +115,8 @@
 
   BadelineMode: true
   SilhouetteMode: true
-  SpriteModeValue: 123456780
   Character_ID: "player_playback"
 
-  SpriteMode_hasBackPack: 10
-  SpriteMode_NoBackPack: 0
 
   HairColors:
   - Dashes: 0
