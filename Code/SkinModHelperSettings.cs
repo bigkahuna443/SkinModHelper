@@ -47,6 +47,10 @@ namespace Celeste.Mod.SkinModHelper {
                         return $"SkinModHelper_options_{nameof(BackpackMode)}_{enumName}".DialogClean();
                     }, 0, enumValues.Length - 1, (int)Backpack)
                 .Change(value => Backpack = (BackpackMode)value);
+
+            if (SkinModHelperUI.Disabled(inGame)) {
+                item.Disabled = true;
+            }
             textMenu.Add(item);
         }
     }

@@ -35,14 +35,8 @@ namespace Celeste.Mod.SkinModHelper
             // Set our update action on our complete menu
             skinSelectMenu.Change(skinId => SkinModHelperModule.UpdateSkin(skinId));
 
-            if (inGame)
-            {
-                skinSelectMenu.AddDescription(menu, Dialog.Clean("SKIN_MOD_HELPER_SETTINGS_SELECTED_SKIN_MOD_DESCRIPTION"));
-                Player player = Engine.Scene?.Tracker.GetEntity<Player>();
-                if (player != null && player.StateMachine.State == Player.StIntroWakeUp)
-                {
-                    skinSelectMenu.Disabled = true;
-                }
+            if (Disabled(inGame)) {
+                skinSelectMenu.Disabled = true;
             }
 
 
@@ -74,6 +68,10 @@ namespace Celeste.Mod.SkinModHelper
         {
             return new EaseInSubMenu(Dialog.Clean("SkinModHelper_Settings_Otherskin"), false).Apply(subMenu =>
             {
+                if (Disabled(inGame)) {
+                    subMenu.Disabled = true;
+                }
+
                 foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
                 {
                     string Options_name = ("SkinModHelper_ExSprite_" + config.Options);
@@ -94,6 +92,18 @@ namespace Celeste.Mod.SkinModHelper
                     subMenu.Add(Options);
                 }
             });
+        }
+
+
+
+        public static bool Disabled(bool inGame) {
+            if (inGame) {
+                Player player = Engine.Scene?.Tracker.GetEntity<Player>();
+                if (player != null && player.StateMachine.State == Player.StIntroWakeUp) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
