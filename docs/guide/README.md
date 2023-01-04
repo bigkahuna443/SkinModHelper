@@ -224,7 +224,7 @@ as the only color -- it will be filled in by your current hair color on death.
    * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number]"
    * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00"
    * 
-Note: some specific sprites's reskin path, can also use "[OtherSprite_ExPath]" to complete the reskin for them
+Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
 
 
 
