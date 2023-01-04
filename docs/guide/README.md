@@ -63,6 +63,7 @@ Then you can choose to add the orientation you want (you can add multiple):
 
 
 If you want to know more about ConfigFile, you may need to know a little about XMLs first
+
 A brief introduction to Xmls File
 -----------------------------------
 Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
