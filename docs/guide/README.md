@@ -1,59 +1,35 @@
 
-
 Skin Mod Helper Guide
 ======================
-
 This guide will walk you through making your skin mod compatible with Skin Mod Helper.
-
-
-
-
-Some features of Skin Mod Helper
------------------------------------
-Skin Mod Helper can specify the hair color for a player skin, and configure each player skin with a unique "bangs" texture, or more
-
-
-Skin Mod Helper also makes your player skin compatible with CelesteNet, allowing everyone to get a player skin of their own
-
-
-Skin Mod Helper can also switch any of your skins at any time, switch at any time, no longer need to restart the game to do it
-
-
-
 
 A brief introduction to ConfigFiles
 -----------------------------------
 ConfigFiles can help our Skin Mod Helper to get information about your Skin Mod
-
 And this Skin Mod Helper ConfigFile is "SkinModHelper.yaml"
-
 
 If your mod needs to use some functions of Skin Mod Helper, then first, you need to do this:
 Create a file named "SkinModHelperConfig.yaml" in your mod root (next to your everest.yaml).
 
-
 In the ConfigFile, you can set two skin types: "PlayerSkin", or "non-PlayerSkin"
 
-
-
-
-Write your Skin's information to the ConfigFile   -- A --
+ConfigFile - Options
 -----------------------------------
 In the ConfigFile, we first need to write this information:
 ```
 - Options: ["Set a base option for your skin"]     # required
 ```
 
-
-
+ConfigFile - Character_ID
+-----------------------------------
 If your skin type is "Player Skin",
 Then, you need to set a PlayerSkin ID for the Option information you wrote, use this to do it:
 ```
-   Character_ID: ["your PlayerSkin ID"]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
+  Character_ID: ["your PlayerSkin ID"]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
-
-
+ConfigFile - SpecificPlayerSprite
+-----------------------------------
 A player skin has some skin textures that cannot be easily replaced in vanilla, 
 such as the "bangs" and "startStarFlyWhite" textures.
 
@@ -65,8 +41,8 @@ If you don't want to do that, and if you want to manually set a more unique new 
   SpecificPlayerSprite_Path: ["path to the root directory of a specific texture"]
 ```
 
-
-
+ConfigFile - HairColors
+-----------------------------------
 If you want your player skin to have a new hair color, other than the default maddy's color, 
 Then you can use this:
 ```
@@ -75,8 +51,8 @@ Then you can use this:
     Color: "ABCDEF" ["use six digit RGB hex code"]
 ```
 
-
-
+ConfigFile - Character_orientation
+-----------------------------------
 If you want to set their character-orientation for your player skin, 
 Then you can choose to add the orientation you want (you can add multiple):
 ```
@@ -118,12 +94,8 @@ as Normal type means: that any ID in this Sprites.xml can be reskin/cover by ski
 
 
 
-Write your Skin's information to the ConfigFile   -- B --
+ConfigFile - OtherSprite
 -----------------------------------
-After briefly talking about Xmls, let's come back to the remaining information available in the ConfigFile
-
-
-
 Regarding the player IDs in Sprites.xml, there are many IDs that are not classified as player IDs, 
 but maddy appears in the animation texture of those IDs.
 
@@ -131,28 +103,28 @@ Such as "lookout", "payphone" and other IDs, or the "HonlyHelper_Petter" ID from
 Below we will introduce a method to let SkinModHelper reskin them with the same ID:
 ```
   OtherSprite_Path: ["Root directory path of Sprites.xml of non-Normal type"]   # Path's starting point is "Graphics/"
-  OtherSprite_ExPath: ["same as above"] # You should only use this if your skin type is "non-player skin". Otherwise you should not set it
+  OtherSprite_ExPath: ["same as above"] # You should only use this if your skin type is "non-player skin"
 ```
 
-
-
+ConfigFile - colorGrade
+-----------------------------------
 For the description of colorGrade, please jump to "https://github.com/bigkahuna443/SkinModHelper/blob/dev/docs/guide/README.md"
 The only difference is that it sets the same content with a new name
 ```
   colorGrade_Path: [custom colorGrade's root directory Path]    # Path's starting point is "Graphics/ColorGrading/"
 ```
 
-
-
-On the premise that the above content settings are basically correct, you will find that your player skin does not appear in "Mod Settings - SMH - Player Skin" when you open the game
+ConfigFile - let "Player Skin" appear in Mod-Options
+-----------------------------------
 We need to use some more content to let it get there:
 ```
-  Player_List: true    # Affects the "SMH - Player Skin" option
-  Silhouette_List: true    # Affects the "SMH - Silhouette Skin" option
+  Player_List: true    # Affects the "Player Skin" option
+  Silhouette_List: true    # Affects the "Silhouette Skin" option
 ```
 
 
-
+ConfigFile - hashSeed
+-----------------------------------
 We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet
 Skin Mod Helper use a hashSeed to do it, that "hashSeed" defaults is "[Options]"
 
