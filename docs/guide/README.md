@@ -171,11 +171,11 @@ So: When the player is no_backpack state,
      your custom skin will auto-jump to custom skins that from "{Options} + _NB"
 
 There are other similar things, they as follows:
-  "{Options} + _NB"
-  "{Options} + _lantern
-            If: you want to reskin JungleHelper some unique content that About Player ID, 
-            then: you need use this to jump
-  "{Options} + _lantern_NB"
+* "{Options} + _NB"
+* "{Options} + _lantern
+   * If: you want to reskin JungleHelper some unique content that About Player ID, 
+   * then: you need use this to jump
+* "{Options} + _lantern_NB"
 
 
 
