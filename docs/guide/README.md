@@ -183,7 +183,6 @@ There are other similar things, they as follows:
 Standard example of ConfigFile
 -----------------------------------
 The following content can be copied directly into your ConfigFile for test: 
-(Regarding the files required for the following configurations, SkinModHelper's own files already contain them, you can refer to those files)
 ```
 - Options: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
@@ -207,6 +206,8 @@ The following content can be copied directly into your ConfigFile for test:
   SilhouetteMode: true
   Character_ID: "player_playback"
 ```
+(Regarding the files and sprites required for the above configurations, SkinModHelper's own files already contain them, you can refer to those files)
+
 
 More Miscellaneous
 ---------------------
