@@ -222,6 +222,7 @@ as the only color -- it will be filled in by your current hair color on death.
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
    * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number]"
    * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00"
+
 Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
 
 
