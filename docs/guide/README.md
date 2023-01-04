@@ -8,19 +8,48 @@ A brief introduction to ConfigFiles
 ConfigFiles can help our Skin Mod Helper to get information about your Skin Mod
 And this Skin Mod Helper ConfigFile is "SkinModHelper.yaml"
 
-If your mod needs to use some functions of Skin Mod Helper, then first, you need to do this:
+If your mod needs to use some functions of Skin Mod Helper. Then first, you need to do this:
 Create a file named "SkinModHelperConfig.yaml" in your mod root (next to your everest.yaml).
 
 In the ConfigFile, you can set two skin types: "PlayerSkin", or "non-PlayerSkin"
 
-ConfigFile - Options
+
+
+all accessible content of ConfigFile
+-----------------------------------
+Here we first list all the things you may use:
+```
+- Options: ["Set a base option for your skin"]
+  Player_List: [true/false]
+  Silhouette_List: [true/false]
+  OtherSprite_ExPath: ["non-Player Skin's need"]
+  
+  Character_ID: ["your PlayerSkin ID"] 
+  hashSeed: ["Options"]
+  
+  BadelineMode: [true/false]
+  SilhouetteMode: [true/false]
+  JungleLanternMode: [true/false]
+  
+  SpecificPlayerSprite: ["an path"]
+  OtherSprite_Path: ["an path"]
+  colorGrade_Path: ["an path"]
+  
+  HairColors:
+  - < HairColors >
+```
+Then Let us describe them separately.
+
+
+
+ConfigInfo - Options
 -----------------------------------
 In the ConfigFile, we first need to write this information:
 ```
 - Options: ["Set a base option for your skin"]     # required
 ```
 
-ConfigFile - Character_ID
+ConfigInfo - Character_ID
 -----------------------------------
 If your skin type is "Player Skin",
 Then, you need to set a PlayerSkin ID for the Option information you wrote, use this to do it:
@@ -28,7 +57,7 @@ Then, you need to set a PlayerSkin ID for the Option information you wrote, use 
   Character_ID: ["your PlayerSkin ID"]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
-ConfigFile - SpecificPlayerSprite
+ConfigInfo - Specific Player Sprite
 -----------------------------------
 A player skin has some skin textures that cannot be easily replaced in vanilla, 
 such as the "bangs" and "startStarFlyWhite" textures.
@@ -41,7 +70,7 @@ If you don't want to do that, and if you want to manually set a more unique new 
   SpecificPlayerSprite_Path: ["path to the root directory of a specific texture"]
 ```
 
-ConfigFile - HairColors
+ConfigInfo - HairColors
 -----------------------------------
 If you want your player skin to have a new hair color, other than the default maddy's color, 
 Then you can use this:
@@ -51,7 +80,7 @@ Then you can use this:
     Color: "ABCDEF" ["use six digit RGB hex code"]
 ```
 
-ConfigFile - Character_orientation
+ConfigInfo - Character Orientation
 -----------------------------------
 If you want to set their character-orientation for your player skin, 
 Then you can choose to add the orientation you want (you can add multiple):
@@ -86,7 +115,7 @@ as Normal type means: that any ID in this Sprites.xml can be reskin/cover by ski
 
 
 
-ConfigFile - OtherSprite
+ConfigInfo - OtherSprite
 -----------------------------------
 Regarding the player IDs in Sprites.xml, there are many IDs that are not classified as player IDs, 
 but maddy appears in the animation texture of those IDs.
@@ -98,15 +127,21 @@ Below we will introduce a method to let SkinModHelper reskin them with the same 
   OtherSprite_ExPath: ["same as above"] # You should only use this if your skin type is "non-player skin"
 ```
 
-ConfigFile - colorGrade
+ConfigInfo - ColorGrades
 -----------------------------------
-For the description of colorGrade, please jump to "https://github.com/bigkahuna443/SkinModHelper/blob/dev/docs/guide/README.md"
-The only difference is that it sets the same content with a new name
+You can add color grades, let your playerSkin self are rendered differently at different dash counts by placing them
 ```
   colorGrade_Path: [custom colorGrade's root directory Path]    # Path's starting point is "Graphics/ColorGrading/"
 ```
+in "Graphics/ColorGrading/[colorGrade_Path]/" and name the images "dashX.png", where X is the number
+of dashes the color grade should apply to. For example, if I had a 0-dash color grade, I would name
+the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
+   * You can grab the base color grade from "Celeste/Content/Graphics/ColorGrading/none.png"
+   * Pick the color you want to replace on the sprite, find that color on the color grade, and then
+   replace it with the color you want for that dash count.
 
-ConfigFile - let "Player Skin" appear in Mod-Options
+
+ConfigInfo - let "Player Skin" appear in Mod-Options
 -----------------------------------
 We need to use some more content to let it get there:
 ```
@@ -115,7 +150,7 @@ We need to use some more content to let it get there:
 ```
 
 
-ConfigFile - hashSeed
+ConfigInfo - hashSeed
 -----------------------------------
 We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet
 Skin Mod Helper use a hashSeed to do it, that "hashSeed" defaults is "[Options]"
@@ -148,7 +183,9 @@ There are other similar things, they as follows:
 
 Standard example of ConfigFile
 -----------------------------------
-The following content can be copied directly into your ConfigFile for test:
+（The following content can be copied directly into your ConfigFile for test）
+Regarding the files required for the following configurations, 
+SkinModHelper's own files already contain them, you can refer to those files:
 ```
 - Options: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
@@ -173,40 +210,14 @@ The following content can be copied directly into your ConfigFile for test:
   Character_ID: "player_playback"
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 More Miscellaneous
 ---------------------
-1. You can add color grades that render over your sprite for different dash values by placing them
-in "Graphics/ColorGrading/[your unique path]" and name the images "dashX.png", where X is the number
-of dashes the color grade should apply to. For example, if I had a 0-dash color grade, I would name
-the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
-   * You can grab the base color grade from "Celeste/Content/Graphics/ColorGrading/none.png"
-   * Pick the color you want to replace on the sprite, find that color on the color grade, and then
-   replace it with the color you want for that dash count.
-
-2. You can add a custom death particle (the circles that appear around Madeline when she dies) by
+1. You can add a custom death particle (the circles that appear around Madeline when she dies) by
 creating a small image named death_particle.png and place it in your player sprite folder. Use white
 as the only color -- it will be filled in by your current hair color on death.
    * For reference, the vanilla death particle is an 8x8 white circle (hair00.png).
 
-3. A few extra things that can be reskinned:
+2. A few extra things that can be reskinned:
    * The particles for feathers: "../Gameplay/[OtherSprite_Path]/particles/feather.png"
    * The particles for dream blocks: "../Gameplay/[OtherSprite_Path]/objects/dreamblock/particles.png"
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
