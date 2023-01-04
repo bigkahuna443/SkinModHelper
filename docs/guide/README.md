@@ -137,12 +137,12 @@ If: exist "{Options} + _NB" in your ConfigFile,
 So: When the player is no_backpack state, 
      your custom skin will auto-jump to custom skins that from "{Options} + _NB"
 
-#There are other similar things, they as follows:
-#  "{Options} + _NB"
-#  "{Options} + _lantern" 
+There are other similar things, they as follows:
+  "{Options} + _NB"
+  "{Options} + _lantern
             If: you want to reskin JungleHelper some unique content that About Player ID, 
             then: you need use this to jump
-#  "{Options} + _lantern_NB"
+  "{Options} + _lantern_NB"
 
 
 
@@ -210,10 +210,11 @@ as the only color -- it will be filled in by your current hair color on death.
 3. A few extra things that can be reskinned:
    * The particles for feathers: "../Gameplay/[OtherSprite_Path]/particles/feather.png"
    * The particles for dream blocks: "../Gameplay/[OtherSprite_Path]/objects/dreamblock/particles.png"
+      * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
    * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number]"
    * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00"
-      * Use the vanilla image as a guide -- you need to space out the three particle sizes in a
-      specific way for them to be used correctly.
+
+
 
 
 Troubleshooting
