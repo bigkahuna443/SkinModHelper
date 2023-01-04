@@ -182,7 +182,7 @@ There are other similar things, they as follows:
 
 Standard example of ConfigFile
 -----------------------------------
-The following content can be copied directly into your ConfigFile for test:
+The following content can be copied directly into your ConfigFile for test: 
 (Regarding the files required for the following configurations, SkinModHelper's own files already contain them, you can refer to those files)
 ```
 - Options: "SkinTest_TestA"
