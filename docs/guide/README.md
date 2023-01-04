@@ -172,7 +172,7 @@ So: When the player is no_backpack state,
 
 There are other similar things, they as follows:
 * "{Options} + _NB"
-* "{Options} + _lantern
+* "{Options} + _lantern"
    * If: you want to reskin JungleHelper some unique content that About Player ID, 
    * then: you need use this to jump
 * "{Options} + _lantern_NB"
@@ -220,8 +220,8 @@ as the only color -- it will be filled in by your current hair color on death.
    * The particles for feathers: "../Gameplay/[OtherSprite_Path]/particles/feather.png"
    * The particles for dream blocks: "../Gameplay/[OtherSprite_Path]/objects/dreamblock/particles.png"
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
-   * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number]"
-   * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00"
+   * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number].png"
+   * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00.png"
 
 Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
 
