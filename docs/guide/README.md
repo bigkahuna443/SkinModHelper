@@ -62,23 +62,14 @@ Then you can choose to add the orientation you want (you can add multiple):
 ```
 
 
-
-You can write multiple skin info to your ConfigFile, 
-this just need repeats everything about "Write your Skin's information to the ConfigFile"
-
-
 If you want to know more about ConfigFile, you may need to know a little about XMLs first
-
-
-
-
 A brief introduction to Xmls File
 -----------------------------------
 Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
 
 Although it is an Xmls file, for the time being, only the Normal type of "Sprites.xml" will be introduced here
 
-If the Sprites.xml is located on the path "Celeste/Mods/anymod/Graphics/", Then this Sprites.xml is "Normal type"
+If the Sprites.xml is located on the path "Celeste/Mods/anymod/Graphics/", Then this Sprites.xml is "Normal type".
 (Vanilla's "Celeste/ContentGraphics/Sprites.xml" is also of "Normal type")
 
 
@@ -134,7 +125,8 @@ Then you can use this to change and fix it.
   hashSeed: ["any"]
 ```
 
-
+You can write multiple skin info to your ConfigFile, 
+this just need repeats everything about "Write your Skin's information to the ConfigFile"
 
 
 Special Jump of ConfigFiles
