@@ -90,7 +90,6 @@ Then you can choose to add the orientation you want (you can add multiple):
   JungleLanternMode: true     # This involves some gameplay mechanisms of JungleHelper, please add carefully
 ```
 
-
 If you want to know more about ConfigFile, you may need to know a little about XMLs first
 
 A brief introduction to Xmls File
@@ -183,9 +182,8 @@ There are other similar things, they as follows:
 
 Standard example of ConfigFile
 -----------------------------------
-（The following content can be copied directly into your ConfigFile for test）
-Regarding the files required for the following configurations, 
-SkinModHelper's own files already contain them, you can refer to those files:
+The following content can be copied directly into your ConfigFile for test:
+(Regarding the files required for the following configurations, SkinModHelper's own files already contain them, you can refer to those files)
 ```
 - Options: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
