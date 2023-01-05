@@ -157,7 +157,7 @@ Skin Mod Helper use a hashSeed to do it, that "hashSeed" defaults is "[Options]"
 If your skin unfortunately conflicts with other skins when compatible with CelesteNet, 
 Then you can use this to change and fix it.
 ```
-  hashSeed: ["any"]
+  hashSeed: [any]
 ```
 
 You can write multiple skin info to your ConfigFile, 
