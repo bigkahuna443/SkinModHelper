@@ -151,8 +151,8 @@ We need to use some more content to let it get there:
 
 ConfigInfo - hashSeed
 -----------------------------------
-We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet
-Skin Mod Helper use a hashSeed to do it, that "hashSeed" defaults is "[Options]"
+We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet.
+SkinModHelper use a "hashSeed" to do it, that "hashSeed" defaults is "[Options]"
 
 If your skin unfortunately conflicts with other skins when compatible with CelesteNet, 
 Then you can use this to change and fix it.
@@ -161,7 +161,7 @@ Then you can use this to change and fix it.
 ```
 
 You can write multiple skin info to your ConfigFile, 
-this just need repeats everything about "Write your Skin's information to the ConfigFile"
+this just need repeats everything about "ConfigInfo"
 
 
 Special Jump of ConfigFiles
