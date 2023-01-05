@@ -22,7 +22,7 @@ Here we first list all the things you may use:
 - Options: ["Set a base option for your skin"]
   Player_List: [true/false]
   Silhouette_List: [true/false]
-  OtherSprite_ExPath: ["non-Player Skin's need"]
+  OtherSprite_ExPath: ["non-Player Skin's required"]
   
   Character_ID: ["your PlayerSkin ID"] 
   hashSeed: ["Options"]
@@ -166,16 +166,16 @@ this just need repeats everything about "Write your Skin's information to the Co
 
 Special Jump of ConfigFiles
 -----------------------------------
-If: exist "{Options} + _NB" in your ConfigFile, 
+If: exist "[Options] + _NB" in your ConfigFile, 
 So: When the player is no_backpack state, 
      your custom skin will auto-jump to custom skins that from "{Options} + _NB"
 
 There are other similar things, they as follows:
-* "{Options} + _NB"
-* "{Options} + _lantern"
+* "[Options] + _NB"
+* "[Options] + _lantern"
    * If: you want to reskin JungleHelper some unique content that About Player ID, 
    * then: you need use this to jump
-* "{Options} + _lantern_NB"
+* "[Options] + _lantern_NB"
 
 
 
