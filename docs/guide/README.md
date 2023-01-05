@@ -97,9 +97,10 @@ A brief introduction to Xmls File
 -----------------------------------
 Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
 
-If You found a Sprites.xml, and the root path of it is "Celeste/Mods/[mod_name]/Graphics/". Then that Sprites.xml is "Normal type".
-As "Normal type" means: that any ID in this Sprites.xml can be reskin/cover by skins compatible with SkinModHelper.
-(Vanilla's Sprites.xml also is "Normal type")
+Normal type: 
+* If a Sprites.xml's root path is "Celeste/Mods/[mod_name]/Graphics/". Then that Sprites.xml is "Normal type".
+* a Sprites.xml as "Normal type" means: That any ID in this Sprites.xml can be reskin/cover by skins compatible with SkinModHelper.
+   * (Vanilla's Sprites.xml also is "Normal type")
 
 If, the skin you make is a player skin. Then: 
 1. you need to create a Sprites.xml of "Normal Type"
