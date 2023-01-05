@@ -19,21 +19,21 @@ all accessible content of ConfigFile
 -----------------------------------
 Here we first list all the things you may use:
 ```
-- Options: ["Set a base option for your skin"]
+- Options: [a option that required]
   Player_List: [true/false]
   Silhouette_List: [true/false]
-  OtherSprite_ExPath: ["non-Player Skin's required"]
+  OtherSprite_ExPath: [non-Player Skin's required]
   
-  Character_ID: ["your PlayerSkin ID"] 
-  hashSeed: ["Options"]
+  Character_ID: [PlayerSkin ID]
+  hashSeed: [Options]
   
-  BadelineMode: [true/false]
+  BadelineMode: [true/false]    
   SilhouetteMode: [true/false]
   JungleLanternMode: [true/false]
   
-  SpecificPlayerSprite: ["an path"]
-  OtherSprite_Path: ["an path"]
-  colorGrade_Path: ["an path"]
+  SpecificPlayerSprite_Path: [an path]
+  OtherSprite_Path: [an path]
+  colorGrade_Path: [an path]
   
   HairColors:
   - < HairColors >
@@ -46,7 +46,7 @@ ConfigInfo - Options
 -----------------------------------
 In the ConfigFile, we first need to write this information:
 ```
-- Options: ["Set a base option for your skin"]     # required
+- Options: [Set a base option for your skin]     # required
 ```
 
 ConfigInfo - Character_ID
@@ -54,7 +54,7 @@ ConfigInfo - Character_ID
 If your skin type is "Player Skin",
 Then, you need to set a PlayerSkin ID for the Option information you wrote, use this to do it:
 ```
-  Character_ID: ["your PlayerSkin ID"]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
+  Character_ID: [your PlayerSkin ID]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
 ConfigInfo - Specific Player Sprite
@@ -63,11 +63,11 @@ A player skin has some skin textures that cannot be easily replaced in vanilla,
 such as the "bangs" and "startStarFlyWhite" textures.
 
 Skin Mod Helper will make those textures no longer use "characters/player" root path, 
-but try to use "characters/[Character_ID]" as the new root path.
+Then try to use "characters/[Character_ID]" as the new root path.
 
 If you don't want to do that, and if you want to manually set a more unique new root path, then you can use this:
 ```
-  SpecificPlayerSprite_Path: ["path to the root directory of a specific texture"]
+  SpecificPlayerSprite_Path: [path to the root directory of a specific texture]     # Path's starting point is "Graphics/Atlases/Gameplay/“
 ```
 
 ConfigInfo - HairColors
@@ -76,8 +76,8 @@ If you want your player skin to have a new hair color, other than the default ma
 Then you can use this:
 ```
   HairColors:     # The following content can be used multiple times, but do not repeat
-  - Dashes: 0 [use 0 to 5]
-    Color: "ABCDEF" ["use six digit RGB hex code"]
+  - Dashes: [use 0 to 5]
+    Color: [use six digit RGB hex code]
 ```
 
 ConfigInfo - Character Orientation
@@ -96,35 +96,33 @@ A brief introduction to Xmls File
 -----------------------------------
 Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
 
-Although it is an Xmls file, for the time being, only the Normal type of "Sprites.xml" will be introduced here
+If You found a Sprites.xml, and the root path of it is "Celeste/Mods/[mod_name]/Graphics/". Then that Sprites.xml is "Normal type".
+As "Normal type" means: that any ID in this Sprites.xml can be reskin/cover by skins compatible with SkinModHelper.
+(Vanilla's Sprites.xml also is "Normal type")
 
-If the Sprites.xml is located on the path "Celeste/Mods/anymod/Graphics/", Then this Sprites.xml is "Normal type".
-(Vanilla's "Celeste/ContentGraphics/Sprites.xml" is also of "Normal type")
-
-
-If, the skin you make is a player skin.
-Then, you need to create a Sprites.xml on a path that conforms to "Normal Type", 
-      and inside it create a new ID called "[Character_ID]" (it should be based on "player_badeline" in vanilla)
-      
-      
-(Note: If the new ID does not match "[Character_ID]", then it will directly crash the game)
-
-as Normal type means: that any ID in this Sprites.xml can be reskin/cover by skins compatible with SkinModHelper
-
-
+If, the skin you make is a player skin. Then: 
+1. you need to create a Sprites.xml of "Normal Type"
+2. inside it create a new ID called "[Character_ID]"  
+   * Use the "player_badeline" ID of vanilla as a guide -- that new ID should Has all animation
+   * Note: If the new ID does not match "[Character_ID]". Then it will directly crash the game
 
 
 ConfigInfo - OtherSprite
 -----------------------------------
-Regarding the player IDs in Sprites.xml, there are many IDs that are not classified as player IDs, 
+Regarding the Player IDs in Sprites.xml, there are many IDs that are not classified as player IDs, 
 but maddy appears in the animation texture of those IDs.
 
 Such as "lookout", "payphone" and other IDs, or the "HonlyHelper_Petter" ID from HonlyHelper.
 Below we will introduce a method to let SkinModHelper reskin them with the same ID:
 ```
-  OtherSprite_Path: ["Root directory path of Sprites.xml of non-Normal type"]   # Path's starting point is "Graphics/"
-  OtherSprite_ExPath: ["same as above"] # You should only use this if your skin type is "non-player skin"
+  OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]   # Path's starting point is "Graphics/"
 ```
+
+If you just want to simply replace some IDs and don't care whether them are related to maddy. Then use this:
+```
+  OtherSprite_ExPath: [same as OtherSprite_Path]
+```
+
 
 ConfigInfo - ColorGrades
 -----------------------------------
