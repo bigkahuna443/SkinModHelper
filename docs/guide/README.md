@@ -67,7 +67,8 @@ Then try to use "characters/[Character_ID]" as the new root path.
 
 If you don't want to do that, and if you want to manually set a more unique new root path, then you can use this:
 ```
-  SpecificPlayerSprite_Path: [path to the root directory of a specific texture]     # Path's starting point is "Graphics/Atlases/Gameplay/“
+  SpecificPlayerSprite_Path: [path to the root directory of a specific texture]     
+    # Path's starting point is "Graphics/Atlases/Gameplay/"
 ```
 
 ConfigInfo - HairColors
