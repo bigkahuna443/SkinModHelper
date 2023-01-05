@@ -39,7 +39,7 @@ See the [guide](docs/guide/README.md) for more information.
 
 Contact
 -------
-If you encounter any issues or have suggestions, on this forked, you can reach me on Discord (AAA1459#7937)
+on this forked, If you encounter any issues or have suggestions, you can reach me on Discord (AAA1459#7937)
 
 
 Credits
