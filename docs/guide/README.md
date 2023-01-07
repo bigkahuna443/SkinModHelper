@@ -116,6 +116,8 @@ If your skin type is "non-Player Skin", you just want to simply reskin some IDs.
   OtherSprite_ExPath: [same as OtherSprite_Path]
 ```
 
+You can also do something like this for any ID in Portraits.xml
+
 
 ColorGrades
 -----------------------------------
@@ -143,7 +145,7 @@ If your skin type is "non-Player Skin", Then when you set [OtherSprite_ExPath] a
 
 hashSeed
 -----------------------------------
-We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet.
+We should have mentioned that the SkinModHelper will make your player skin compatible with CelesteNet.
 SkinModHelper use a "hashSeed" to do it, that "hashSeed" defaults is "[Options]"
 
 If your skin happens to conflict with other skins when compatible with CelesteNet, 
