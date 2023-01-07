@@ -108,15 +108,13 @@ but maddy appears in the animation texture of those IDs.
 Such as "lookout", "payphone" and other IDs, or the "HonlyHelper_Petter" ID from HonlyHelper.
 Below we will introduce a method to let SkinModHelper reskin them with the same ID:
 ```
-  OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]   # Path's starting point is "Graphics/"
-    # You can also do something like this for any ID in Portraits.xml by use Portraits.xml of non-Normal type
+  OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]    # Path's starting point is "Graphics/".
 ```
 
 If your skin type is "non-Player Skin", you just want to simply reskin some IDs. Then use this:
 ```
   OtherSprite_ExPath: [same as OtherSprite_Path]
 ```
-
 
 ColorGrades
 -----------------------------------
@@ -132,14 +130,14 @@ the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
    replace it with the color you want for that dash count.
 
 
-`let your skin appear in Mod-Options`
+let your skin appear in Mod-Options
 -----------------------------------
 If your skin type is "Player Skin", Then We need to use some more content to let it get there:
 ```
   Player_List: true    # Affects the "Player Skin" option
   Silhouette_List: true    # Affects the "Silhouette Skin" option
 ```
-If your skin type is "non-Player Skin", Then when you set [OtherSprite_ExPath] after, them will appear in "Extra Settings" list
+If your skin type is "non-Player Skin", Then when you set "[OtherSprite_ExPath]" after, them will appear in "Extra Settings" list
 
 
 hashSeed
@@ -204,12 +202,15 @@ The following content can be copied directly into your config file for test:
 
 More Miscellaneous
 ---------------------
-1. You can add a custom death particle (the circles that appear around Madeline when she dies) by
-creating a small image named death_particle.png and place it in your [SpecificPlayerSprite_Path] folder. Use white
+1. About reskin method mentioned in OtherSprite, it also can work for Portraits.xml, 
+Just consider the corresponding "Sprites.xml" as "Portraits.xml".
+
+2. You can add a custom death particle (the circles that appear around Madeline when she dies) by
+creating a small image named death_particle.png and place it in your "[SpecificPlayerSprite_Path]" folder. Use white
 as the only color -- it will be filled in by your current hair color on death.
    * For reference, the vanilla death particle is an 8x8 white circle (hair00.png).
 
-2. A few extra things that can be reskinned:
+3. A few extra things that can be reskinned:
    * The particles for feathers: "../Gameplay/[OtherSprite_Path]/particles/feather.png"
    * The particles for dream blocks: "../Gameplay/[OtherSprite_Path]/objects/dreamblock/particles.png"
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
