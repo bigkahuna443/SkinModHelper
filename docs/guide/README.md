@@ -111,8 +111,7 @@ Below we will introduce a method to let SkinModHelper reskin them with the same 
   OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]   # Path's starting point is "Graphics/"
 ```
 
-If you just want to simply replace some IDs and don't care whether them are related to maddy. 
-If your skin type is "non-Player Skin", Then use this:
+If your skin type is "non-Player Skin", you just want to simply reskin some IDs. Then use this:
 ```
   OtherSprite_ExPath: [same as OtherSprite_Path]
 ```
