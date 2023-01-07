@@ -109,14 +109,13 @@ Such as "lookout", "payphone" and other IDs, or the "HonlyHelper_Petter" ID from
 Below we will introduce a method to let SkinModHelper reskin them with the same ID:
 ```
   OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]   # Path's starting point is "Graphics/"
+    # You can also do something like this for any ID in Portraits.xml by use Portraits.xml of non-Normal type
 ```
 
 If your skin type is "non-Player Skin", you just want to simply reskin some IDs. Then use this:
 ```
   OtherSprite_ExPath: [same as OtherSprite_Path]
 ```
-
-You can also do something like this for any ID in Portraits.xml
 
 
 ColorGrades
