@@ -202,7 +202,7 @@ The following content can be copied directly into your config file for test:
 
 More Miscellaneous
 ---------------------
-1. About reskin method mentioned in OtherSprite, it also can work for Portraits.xml, 
+1. About reskin method mentioned in "OtherSprite", it also can work for Portraits.xml, 
 Just consider the corresponding "Sprites.xml" as "Portraits.xml".
 
 2. You can add a custom death particle (the circles that appear around Madeline when she dies) by
