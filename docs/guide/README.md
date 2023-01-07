@@ -58,7 +58,7 @@ Then try to use "characters/[Character_ID]" as the new root path.
 
 If you don't want to do that, and if you want to manually set a more unique new root path, then you can use this:
 ```
-  SpecificPlayerSprite_Path: [path to the root directory of a specific texture]     
+  SpecificPlayerSprite_Path: [path to the root directory of some specific texture]     
     # Path's starting point is "Graphics/Atlases/Gameplay/"
 ```
 
@@ -95,7 +95,7 @@ Normal type:
 
 If, the skin you make is a player skin. Then: 
 1. you need to create a Sprites.xml of "Normal Type"
-2. inside it create a new ID called "[Character_ID]"  
+2. inside it create a new ID called "[Character_ID]"
    * Use the "player_badeline" ID of vanilla as a guide -- that new ID should have all animations
    * Note: If the new ID does not match "[Character_ID]". Then it will directly crash the game
 
@@ -111,7 +111,8 @@ Below we will introduce a method to let SkinModHelper reskin them with the same 
   OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]   # Path's starting point is "Graphics/"
 ```
 
-If you just want to simply replace some IDs and don't care whether them are related to maddy. Then use this:
+If you just want to simply replace some IDs and don't care whether them are related to maddy. 
+If your skin type is "non-Player Skin", Then use this:
 ```
   OtherSprite_ExPath: [same as OtherSprite_Path]
 ```
@@ -131,13 +132,14 @@ the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
    replace it with the color you want for that dash count.
 
 
-let "Player Skin" appear in Mod-Options
+`let your skin appear in Mod-Options`
 -----------------------------------
-We need to use some more content to let it get there:
+If your skin type is "Player Skin", Then We need to use some more content to let it get there:
 ```
   Player_List: true    # Affects the "Player Skin" option
   Silhouette_List: true    # Affects the "Silhouette Skin" option
 ```
+If your skin type is "non-Player Skin", Then when you set [OtherSprite_ExPath] after, them will appear in "Extra Settings" list
 
 
 hashSeed
@@ -203,7 +205,7 @@ The following content can be copied directly into your config file for test:
 More Miscellaneous
 ---------------------
 1. You can add a custom death particle (the circles that appear around Madeline when she dies) by
-creating a small image named death_particle.png and place it in your player sprite folder. Use white
+creating a small image named death_particle.png and place it in your [SpecificPlayerSprite_Path] folder. Use white
 as the only color -- it will be filled in by your current hair color on death.
    * For reference, the vanilla death particle is an 8x8 white circle (hair00.png).
 
