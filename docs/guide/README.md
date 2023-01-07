@@ -3,26 +3,19 @@ Skin Mod Helper Guide
 ======================
 This guide will walk you through making your skin mod compatible with Skin Mod Helper.
 
-A brief introduction to ConfigFiles
------------------------------------
-ConfigFiles can help our Skin Mod Helper to get information about your Skin Mod
-And this Skin Mod Helper ConfigFile is "SkinModHelper.yaml"
+A brief introduction to config files
+------------------------------------
+Config files can help the Skin Mod Helper find information about your skin mod.
+If your mod provides a skin, then you need to create a file named "SkinModHelperConfig.yaml" in your mod root (next to your everest.yaml).
 
-If your mod needs to use some functions of Skin Mod Helper. Then first, you need to do this:
-Create a file named "SkinModHelperConfig.yaml" in your mod root (next to your everest.yaml).
+Here is a skeleton of a SkinModHelperConfig.yaml file.
+Each of the fields will be explained below.
 
-In the ConfigFile, you can set two skin types: "PlayerSkin", or "non-PlayerSkin"
-
-
-
-all accessible content of ConfigFile
------------------------------------
-Here we first list all the things you may use:
-```
-- Options: [a option that required]
+```yaml
+- Options: [an option that is required]
   Player_List: [true/false]
   Silhouette_List: [true/false]
-  OtherSprite_ExPath: [non-Player Skin's required]
+  OtherSprite_ExPath: [non-player Skin's required]
   
   Character_ID: [PlayerSkin ID]
   hashSeed: [Options]
@@ -31,33 +24,31 @@ Here we first list all the things you may use:
   SilhouetteMode: [true/false]
   JungleLanternMode: [true/false]
   
-  SpecificPlayerSprite_Path: [an path]
-  OtherSprite_Path: [an path]
-  colorGrade_Path: [an path]
+  SpecificPlayerSprite_Path: [a path]
+  OtherSprite_Path: [a path]
+  colorGrade_Path: [a path]
   
   HairColors:
   - < HairColors >
 ```
-Then Let us describe them separately.
 
 
-
-ConfigInfo - Options
+Options
 -----------------------------------
-In the ConfigFile, we first need to write this information:
+In the config file, we first need to write this information:
 ```
 - Options: [Set a base option for your skin]     # required
 ```
 
-ConfigInfo - Character_ID
------------------------------------
+`Character_ID`
+---------------------------
 If your skin type is "Player Skin",
 Then, you need to set a PlayerSkin ID for the Option information you wrote, use this to do it:
 ```
   Character_ID: [your PlayerSkin ID]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
-ConfigInfo - Specific Player Sprite
+Specific Player Sprite
 -----------------------------------
 A player skin has some skin textures that cannot be easily replaced in vanilla, 
 such as the "bangs" and "startStarFlyWhite" textures.
@@ -71,7 +62,7 @@ If you don't want to do that, and if you want to manually set a more unique new 
     # Path's starting point is "Graphics/Atlases/Gameplay/"
 ```
 
-ConfigInfo - HairColors
+HairColors
 -----------------------------------
 If you want your player skin to have a new hair color, other than the default maddy's color, 
 Then you can use this:
@@ -81,19 +72,19 @@ Then you can use this:
     Color: [use six digit RGB hex code]
 ```
 
-ConfigInfo - Character Orientation
+Character Orientation
 -----------------------------------
 If you want to set their character-orientation for your player skin, 
 Then you can choose to add the orientation you want (you can add multiple):
 ```
   BadelineMode: true     # Let the default hair color of PlayerSkin be baddy
   SilhouetteMode: true     # Let PlayerSkin's all-body get its itself HairColor, be like a Silhouette
-  JungleLanternMode: true     # This involves some gameplay mechanisms of JungleHelper, please add carefully
+  JungleLanternMode: true     # This involves some gameplay mechanisms of JungleHelper, probably don't add this unless you know what you're doing
 ```
 
-If you want to know more about ConfigFile, you may need to know a little about XMLs first
+If you want to know more about config file, you may need to know a little about XMLs first
 
-A brief introduction to Xmls File
+A brief introduction to Sprites.xml
 -----------------------------------
 Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
 
@@ -105,11 +96,11 @@ Normal type:
 If, the skin you make is a player skin. Then: 
 1. you need to create a Sprites.xml of "Normal Type"
 2. inside it create a new ID called "[Character_ID]"  
-   * Use the "player_badeline" ID of vanilla as a guide -- that new ID should Has all animation
+   * Use the "player_badeline" ID of vanilla as a guide -- that new ID should have all animations
    * Note: If the new ID does not match "[Character_ID]". Then it will directly crash the game
 
 
-ConfigInfo - OtherSprite
+OtherSprite
 -----------------------------------
 Regarding the Player IDs in Sprites.xml, there are many IDs that are not classified as player IDs, 
 but maddy appears in the animation texture of those IDs.
@@ -126,7 +117,7 @@ If you just want to simply replace some IDs and don't care whether them are rela
 ```
 
 
-ConfigInfo - ColorGrades
+ColorGrades
 -----------------------------------
 You can add color grades, let your playerSkin self are rendered differently at different dash counts by placing them
 ```
@@ -140,7 +131,7 @@ the file "Graphics/ColorGrading/Bigkahuna/MySkin/dash0.png".
    replace it with the color you want for that dash count.
 
 
-ConfigInfo - let "Player Skin" appear in Mod-Options
+let "Player Skin" appear in Mod-Options
 -----------------------------------
 We need to use some more content to let it get there:
 ```
@@ -149,24 +140,24 @@ We need to use some more content to let it get there:
 ```
 
 
-ConfigInfo - hashSeed
+hashSeed
 -----------------------------------
 We should have mentioned that the Skin Mod Helper will make your skin compatible with CelesteNet.
 SkinModHelper use a "hashSeed" to do it, that "hashSeed" defaults is "[Options]"
 
-If your skin unfortunately conflicts with other skins when compatible with CelesteNet, 
+If your skin happens to conflict with other skins when compatible with CelesteNet, 
 Then you can use this to change and fix it.
 ```
   hashSeed: [any]
 ```
 
-You can write multiple skin info to your ConfigFile, 
+You can write multiple skin info to your config file, 
 this just need repeats everything about "ConfigInfo"
 
 
-Special Jump of ConfigFiles
+Special Jump of config files
 -----------------------------------
-If: exist "[Options] + _NB" in your ConfigFile, 
+If: exist "[Options] + _NB" in your config file, 
 So: When the player is no_backpack state, 
      your custom skin will auto-jump to custom skins that from "{Options} + _NB"
 
@@ -180,9 +171,9 @@ There are other similar things, they as follows:
 
 
 
-Standard example of ConfigFile
+Standard example of config file
 -----------------------------------
-The following content can be copied directly into your ConfigFile for test: 
+The following content can be copied directly into your config file for test: 
 ```
 - Options: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
@@ -250,3 +241,4 @@ If you get crashes:
 This process can be pretty involved, especially if you are porting over an existing skin mod,
 so feel free to [contact me](../../README.md#contact) if you need help, find an issue, or would
 like a new feature supported! You can also use a currently supported skin mod as a reference.
+
