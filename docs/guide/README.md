@@ -67,7 +67,7 @@ HairColors
 If you want your player skin to have a new hair color, other than the default maddy's color, 
 Then you can use this:
 ```
-  HairColors:     # The following content can be used multiple times, but do not repeat
+  HairColors:     # The following content can be set multiple times, but do not let [Dashes] repeat
   - Dashes: [use 0 to 5]
     Color: [use six digit RGB hex code]
 ```
@@ -78,20 +78,16 @@ If you want to set their character-orientation for your player skin,
 Then you can choose to add the orientation you want (you can add multiple):
 ```
   BadelineMode: true     # Let the default hair color of PlayerSkin be baddy
-  SilhouetteMode: true     # Let PlayerSkin's all-body get its itself HairColor, be like a Silhouette
+  SilhouetteMode: true     # Color the player's entire body with its hair color, like a silhouette
   JungleLanternMode: true     # This involves some gameplay mechanisms of JungleHelper, probably don't add this unless you know what you're doing
 ```
 
-If you want to know more about config file, you may need to know a little about XMLs first
-
 A brief introduction to Sprites.xml
 -----------------------------------
-Sprites.Xml has two types, one is "Normal type" and the other is "non-Normal type"
+If you want to know more about config file, you may need to know a little about XMLs first
 
-Normal type: 
-* If a Sprites.xml's root path is "Celeste/Mods/[mod_name]/Graphics/". Then that Sprites.xml is "Normal type".
-* a Sprites.xml as "Normal type" means: That any ID in this Sprites.xml can be reskin/cover by skins compatible with SkinModHelper.
-   * (Vanilla's Sprites.xml also is "Normal type")
+SkinModHelper can only replace sprites included in the default Sprites.xml location.
+that location is "Celeste/Mods/[mod_name]/Graphics/Sprites.xml" or "Celeste/Content/Graphics/Sprites.xml"
 
 If, the skin you make is a player skin. Then: 
 1. you need to create a Sprites.xml of "Normal Type"
@@ -108,7 +104,7 @@ but maddy appears in the animation texture of those IDs.
 Such as "lookout", "payphone" and other IDs, or the "HonlyHelper_Petter" ID from HonlyHelper.
 Below we will introduce a method to let SkinModHelper reskin them with the same ID:
 ```
-  OtherSprite_Path: [Root directory path of Sprites.xml of non-Normal type]    # Path's starting point is "Graphics/".
+  OtherSprite_Path: [Root directory path of non-default Sprites.xml]    # Path's starting point is "Graphics/".
 ```
 
 If your skin type is "non-Player Skin", you just want to simply reskin some IDs. Then use this:
