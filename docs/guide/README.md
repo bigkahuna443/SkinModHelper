@@ -86,8 +86,8 @@ A brief introduction to Sprites.xml
 -----------------------------------
 If you want to know more about config file, you may need to know a little about XMLs first
 
-SkinModHelper can only replace sprites included in the default Sprites.xml location.
-that location is "Celeste/Mods/[mod_name]/Graphics/Sprites.xml" or "Celeste/Content/Graphics/Sprites.xml"
+SkinModHelper can only replace sprites included in the default Sprites.xml location. 
+("Celeste/Mods/[mod_name]/Graphics/Sprites.xml" or "Celeste/Content/Graphics/Sprites.xml")
 
 If, the skin you make is a player skin. Then: 
 1. you need to create a Sprites.xml of "Normal Type"
