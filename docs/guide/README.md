@@ -12,13 +12,13 @@ Here is a skeleton of a SkinModHelperConfig.yaml file.
 Each of the fields will be explained below.
 
 ```yaml
-- Options: [an option that is required]
+- SkinName: [an SkinName that is required]
   Player_List: [true/false]
   Silhouette_List: [true/false]
   OtherSprite_ExPath: [non-player Skin's required]
   
-  Character_ID: [PlayerSkin ID]
-  hashSeed: [Options]
+  Character_ID: [new Player ID]
+  hashSeed: [SkinName]
   
   BadelineMode: [true/false]    
   SilhouetteMode: [true/false]
@@ -33,19 +33,21 @@ Each of the fields will be explained below.
 ```
 
 
-Options
+SkinName
 -----------------------------------
 In the config file, we first need to write this information:
 ```
-- Options: [Set a base option for your skin]     # required
+- SkinName: [Set a base option for your skin]     # required
 ```
+#[SkinName] is a temporary name in guide. if you want to use it now, please use [Options]
+
 
 `Character_ID`
 ---------------------------
 If your skin type is "Player Skin",
-Then, you need to set a PlayerSkin ID for the Option information you wrote, use this to do it:
+Then, you need to set a PlayerSkin ID for the SkinName information you wrote, use this to do it:
 ```
-  Character_ID: [your PlayerSkin ID]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
+  Character_ID: [your new Player ID]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
 Specific Player Sprite
@@ -72,10 +74,10 @@ Then you can use this:
     Color: [use six digit RGB hex code]
 ```
 
-Character Orientation
+Character's effect setting
 -----------------------------------
-If you want to set their character-orientation for your player skin, 
-Then you can choose to add the orientation you want (you can add multiple):
+If you want to set their character-effect for your player skin, 
+Then you can choose to add the effect you want (you can add multiple):
 ```
   BadelineMode: true     # Let the default hair color of PlayerSkin be baddy
   SilhouetteMode: true     # Color the player's entire body with its hair color, like a silhouette
@@ -87,11 +89,12 @@ A brief introduction to Sprites.xml
 If you want to know more about config file, you may need to know a little about XMLs first
 
 SkinModHelper can only replace sprites included in the default Sprites.xml location. 
-("Celeste/Mods/[mod_name]/Graphics/Sprites.xml" or "Celeste/Content/Graphics/Sprites.xml")
+("Celeste/Mods/[mod_name]/Graphics/Sprites.xml" or Vanilla's "Celeste/Content/Graphics/Sprites.xml")
 
-If, the skin you make is a player skin. Then: 
-1. you need to create a Sprites.xml of "Normal Type"
-2. inside it create a new ID called "[Character_ID]"
+If, the skin you make is a player skin. then we have these things: 
+1. SkinModHelper will make player get your "[Character_ID]", no longer get Player IDs in vanilla.
+2. So we need to create a Sprites.xml of default location.
+3. inside it create a new ID called "[Character_ID]".
    * Use the "player_badeline" ID of vanilla as a guide -- that new ID should have all animations
    * Note: If the new ID does not match "[Character_ID]". Then it will directly crash the game
 
@@ -139,7 +142,7 @@ If your skin type is "non-Player Skin", Then when you set "[OtherSprite_ExPath]"
 hashSeed
 -----------------------------------
 We should have mentioned that the SkinModHelper will make your player skin compatible with CelesteNet.
-SkinModHelper use a "hashSeed" to do it, that "hashSeed" defaults is "[Options]"
+SkinModHelper use a "hashSeed" to do it, that "hashSeed" defaults is "[SkinName]"
 
 If your skin happens to conflict with other skins when compatible with CelesteNet, 
 Then you can use this to change and fix it.
@@ -153,16 +156,18 @@ this just need repeats everything about "ConfigInfo"
 
 Special Jump of config files
 -----------------------------------
-If: exist "[Options] + _NB" in your config file, 
-So: When the player is no_backpack state, 
-     your custom skin will auto-jump to custom skins that from "{Options} + _NB"
+You select a skin in SkinModHelper. 
+If there are some special names close to that skin in the config file, and you meet some conditions.
+Then SkinModHelper will try to do a special jump.
 
-There are other similar things, they as follows:
-* "[Options] + _NB"
-* "[Options] + _lantern"
-   * If: you want to reskin JungleHelper some unique content that About Player ID, 
-   * then: you need use this to jump
-* "[Options] + _lantern_NB"
+We will introduce those special jumps and their jump conditions:
+* "[SkinName] + _NB" 
+   * conditions: When the player is no_backpack state
+* "[SkinName] + _lantern"
+   * If you want reskin some Player ID from JungleHelper, then you can use this special jump
+   * conditions: When the player get lantern from JungleHelper
+* "[SkinName] + _lantern_NB"
+   * conditions: When the player get lantern from JungleHelper and is no_backpack state
 
 
 
@@ -171,23 +176,23 @@ Standard example of config file
 -----------------------------------
 The following content can be copied directly into your config file for test: 
 ```
-- Options: "SkinTest_TestA"
+- SkinName: "SkinTest_TestA"
   OtherSprite_ExPath: "SkinTest/TestA"
 
-- Options: "SkinTest_TestB"
+- SkinName: "SkinTest_TestB"
   OtherSprite_ExPath: "SkinTest/TestB"
 
 
-- Options: "vanilla_player"
+- SkinName: "vanilla_player"
   Player_List: true
   Character_ID: "player"
   OtherSprite_Path: "SkinTest/TestA"
 
-- Options: "vanilla_player_NB"
+- SkinName: "vanilla_player_NB"
   Character_ID: "player_no_backpack"
 
 
-- Options: "vanilla_Silhouette"
+- SkinName: "vanilla_Silhouette"
   Player_List: true
 
   SilhouetteMode: true
