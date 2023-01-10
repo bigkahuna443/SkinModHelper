@@ -69,7 +69,7 @@ HairColors
 If you want your player skin to have a new hair color, other than the default maddy's color, 
 Then you can use this:
 ```
-  HairColors:     # The following content can be set multiple times, but do not let [Dashes] repeat
+  HairColors:     # The following content can be set multiple times, but do not let [Dashes] repeat same number
   - Dashes: [use 0 to 5]
     Color: [use six digit RGB hex code]
 ```
