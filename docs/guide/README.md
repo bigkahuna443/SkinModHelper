@@ -151,7 +151,7 @@ Then you can use this to change and fix it.
 ```
 
 You can write multiple skin info to your config file, 
-this just need repeats everything about "ConfigInfo"
+this just need repeats everything above steps.
 
 
 Special Jump of config files
@@ -169,6 +169,7 @@ We will introduce those special jumps and their jump conditions:
 * "[SkinName] + _lantern_NB"
    * conditions: When the player get lantern from JungleHelper and is no_backpack state
 
+Note: special-jump to other skin after, you used skin's info will all is from that other skin's config info
 
 
 
@@ -241,6 +242,9 @@ If you get crashes:
 * Check your log to see if it's a missing texture
 * Make sure you don't have any "Metadata" sections for missing animations in Sprites.xml
 * Contact me!
+
+If you want to find all vanilla textures (png format):
+* You can find it here: [Celeste Graphics Dump v1400](https://drive.google.com/file/d/1ITwCI2uJ7YflAG0OwBR4uOUEJBjwTCet/view)
 
 This process can be pretty involved, especially if you are porting over an existing skin mod,
 so feel free to [contact me](../../README.md#contact) if you need help, find an issue, or would
