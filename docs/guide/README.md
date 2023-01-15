@@ -43,8 +43,6 @@ In the config file, we first need to write this information:
 ```
 - SkinName: [Set a base option for your skin]     # required
 ```
-#[SkinName] is a temporary name in guide. if you want to use it now, please use [Options]
-
 
 `Character_ID`
 ---------------------------
