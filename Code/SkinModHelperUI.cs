@@ -24,11 +24,11 @@ namespace Celeste.Mod.SkinModHelper
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
-                bool selected = config.Options == SkinModHelperModule.Settings.SelectedPlayerSkin;
-                string name = Dialog.Clean("SkinModHelper_Player_" + config.Options);
+                bool selected = config.SkinName == SkinModHelperModule.Settings.SelectedPlayerSkin;
+                string name = Dialog.Clean("SkinModHelper_Player_" + config.SkinName);
                 if (config.Player_List)
                 {
-                    skinSelectMenu.Add(name, config.Options, selected);
+                    skinSelectMenu.Add(name, config.SkinName, selected);
                 }
             }
 
@@ -51,11 +51,11 @@ namespace Celeste.Mod.SkinModHelper
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
-                bool selected = config.Options == SkinModHelperModule.Settings.SelectedSilhouetteSkin;
-                string name = Dialog.Clean("SkinModHelper_Silhouette_" + config.Options);
+                bool selected = config.SkinName == SkinModHelperModule.Settings.SelectedSilhouetteSkin;
+                string name = Dialog.Clean("SkinModHelper_Silhouette_" + config.SkinName);
                 if (config.Silhouette_List)
                 {
-                    skinSelectMenu.Add(name, config.Options, selected);
+                    skinSelectMenu.Add(name, config.SkinName, selected);
                 }
             }
 
@@ -74,20 +74,20 @@ namespace Celeste.Mod.SkinModHelper
 
                 foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values)
                 {
-                    string Options_name = ("SkinModHelper_ExSprite_" + config.Options);
+                    string Options_name = ("SkinModHelper_ExSprite_" + config.SkinName);
                     bool Options_OnOff = false;
 
-                    if (!SkinModHelperModule.Settings.ExtraXmlList.ContainsKey(config.Options))
+                    if (!SkinModHelperModule.Settings.ExtraXmlList.ContainsKey(config.SkinName))
                     {
-                        SkinModHelperModule.Settings.ExtraXmlList.Add(config.Options, false);
+                        SkinModHelperModule.Settings.ExtraXmlList.Add(config.SkinName, false);
                     }
                     else
                     {
-                        Options_OnOff = SkinModHelperModule.Settings.ExtraXmlList[config.Options];
+                        Options_OnOff = SkinModHelperModule.Settings.ExtraXmlList[config.SkinName];
                     }
 
                     TextMenu.OnOff Options = new TextMenu.OnOff(Dialog.Clean(Options_name), Options_OnOff);
-                    Options.Change(OnOff => SkinModHelperModule.UpdateExtraXml(config.Options, OnOff));
+                    Options.Change(OnOff => SkinModHelperModule.UpdateExtraXml(config.SkinName, OnOff));
 
                     subMenu.Add(Options);
                 }
