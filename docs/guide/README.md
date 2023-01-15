@@ -13,9 +13,10 @@ Each of the fields will be explained below.
 
 ```yaml
 - SkinName: [an SkinName that is required]
+
+  # ---Player skin---
   Player_List: [true/false]
   Silhouette_List: [true/false]
-  OtherSprite_ExPath: [non-player Skin's required]
   
   Character_ID: [new Player ID]
   hashSeed: [SkinName]
@@ -30,6 +31,9 @@ Each of the fields will be explained below.
   
   HairColors:
   - < HairColors >
+  
+  # ---non-Player skin---
+  OtherSprite_ExPath: [a path]
 ```
 
 
@@ -225,9 +229,11 @@ Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to 
 
 Troubleshooting
 -----------------------
-If your skin is not appearing in the menu:
+If your skin is not be registered (or does not appear in the menu):
 * Make sure your configuration file is named correctly and in the right place
-* Make sure the ID is present, unique, and correct
+* Check your log to see your skin report anything when trying to register
+* If the log says nothing, see this section: 
+  [let your skin appear in Mod-Options](https://github.com/AAA1459/SkinModHelper/edit/backup/docs/guide/README.md#let-your-skin-appear-in-mod-options)
 
 If your sprites/portraits are not appearing in-game:
 * Make sure your XML is valid. You can compare to the vanilla files or use an [online syntax checker](https://www.xmlvalidation.com/)
