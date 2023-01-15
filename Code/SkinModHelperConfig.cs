@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 
 namespace Celeste.Mod.SkinModHelper {
     public class SkinModHelperConfig {
-        public string Options { get; set; }
+        public string SkinName { get; set; }
         public bool Player_List { get; set; }
         public bool Silhouette_List { get; set; }
 
