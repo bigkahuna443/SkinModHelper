@@ -11,15 +11,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Mono.Cecil.Cil;
+using System.IO;
 
 using Celeste.Mod.JungleHelper;
+using Celeste.Mod.SaveFilePortraits;
 
 namespace Celeste.Mod.SkinModHelper {
     public class SkinModHelperModule : EverestModule {
         public static SkinModHelperModule Instance;
         public static readonly string DEFAULT = "Default";
         public static readonly int MAX_DASHES = 5;
-
 
         public override Type SettingsType => typeof(SkinModHelperSettings);
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
@@ -29,6 +30,10 @@ namespace Celeste.Mod.SkinModHelper {
 
         public static Dictionary<string, SkinModHelperConfig> skinConfigs;
         public static Dictionary<string, SkinModHelperConfig> OtherskinConfigs;
+
+        public static string Xml_record;
+        public static Dictionary<string, string> Xml_records;
+
         private static ILHook TextboxRunRoutineHook;
         private static ILHook TempleFallCoroutineHook;
 
@@ -41,6 +46,7 @@ namespace Celeste.Mod.SkinModHelper {
             skinConfigs = new Dictionary<string, SkinModHelperConfig>();
             OtherskinConfigs = new Dictionary<string, SkinModHelperConfig>();
 
+            Xml_records = new Dictionary<string, string>();
 
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "JungleHelper", Version = new Version(1, 0, 8) })) {
                 JungleHelperInstalled = true;
@@ -48,9 +54,13 @@ namespace Celeste.Mod.SkinModHelper {
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "ExtendedVariantMode", Version = new Version(0, 22, 21) })) {
                 ExtendedInstalled = true;
             }
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata { Name = "SaveFilePortraits", Version = new Version(1, 0, 0) })) {
+                SaveFilePortraits = true;
+            }
         }
-        bool ExtendedInstalled = false;
         bool JungleHelperInstalled = false;
+        bool ExtendedInstalled = false;
+        bool SaveFilePortraits = false;
 
         public override void Load() {
             SkinModHelperInterop.Load();
@@ -82,9 +92,10 @@ namespace Celeste.Mod.SkinModHelper {
 
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
-
+            
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
             On.Celeste.GameLoader.LoadThread += GameLoaderLoadThreadHook;
+            On.Celeste.OuiFileSelectSlot.Setup += OuiFileSelectSlotSetupHook;
 
             IL.Celeste.DeathEffect.Draw += DeathEffectDrawHook;
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
@@ -139,7 +150,8 @@ namespace Celeste.Mod.SkinModHelper {
 
             On.Celeste.LevelLoader.LoadingThread -= LevelLoaderLoadingThreadHook;
             On.Celeste.GameLoader.LoadThread -= GameLoaderLoadThreadHook;
-
+            On.Celeste.OuiFileSelectSlot.Setup -= OuiFileSelectSlotSetupHook;
+            
             IL.Celeste.DeathEffect.Draw -= DeathEffectDrawHook;
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool -= DreamBlockHook;
             
@@ -159,7 +171,6 @@ namespace Celeste.Mod.SkinModHelper {
                                                  typeof(SkinModHelperModule).GetMethod("HasLantern", BindingFlags.Public | BindingFlags.Static));
         }
 
-        public static string Xml_record;
         public void SpecificSprite_LoopReload() {
             string skinId = XmlCombineValue();
             if (Xml_record != skinId) {
@@ -400,7 +411,7 @@ namespace Celeste.Mod.SkinModHelper {
             }
         }
 
-        public static void ReloadSettings() {
+        public void ReloadSettings() {
             skinConfigs.Clear();
             OtherskinConfigs.Clear();
             Instance.LoadSettings();
@@ -755,15 +766,15 @@ namespace Celeste.Mod.SkinModHelper {
 
         //---Other Sprite---
         private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id) {
-            string newId = id + "_" + XmlCombineValue();
+            string newId = id + Xml_record;
             if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
             return orig(self, sprite, id);
         }
-
+        
         private Sprite SpriteBankCreateHook(On.Monocle.SpriteBank.orig_Create orig, SpriteBank self, string id) {
-            string newId = id + "_" + XmlCombineValue();
+            string newId = id + Xml_record;
             if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
@@ -773,7 +784,7 @@ namespace Celeste.Mod.SkinModHelper {
         // We only need this for file select : )
         private void GameLoaderLoadThreadHook(On.Celeste.GameLoader.orig_LoadThread orig, GameLoader self) {
             orig(self);
-            string skinId = XmlCombineValue();
+            string skinId = Xml_record = XmlCombineValue();
 
             foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
                 if (Settings.ExtraXmlList.ContainsKey(config.SkinName)) {
@@ -795,8 +806,9 @@ namespace Celeste.Mod.SkinModHelper {
 
         // Wait until the main sprite bank is created, then combine with our skin mod banks
         private void LevelLoaderLoadingThreadHook(On.Celeste.LevelLoader.orig_LoadingThread orig, LevelLoader self) {
+
+            //at this Hooking time, The level data has not established, cannot get Default backpack state of Level 
             if (Settings.Backpack != SkinModHelperSettings.BackpackMode.Default) {
-                //at this Hooking time, The level data has not established, cannot get Default backpack state of Level 
                 backpackOn = Settings.Backpack != SkinModHelperSettings.BackpackMode.Off;
             }
 
@@ -807,10 +819,50 @@ namespace Celeste.Mod.SkinModHelper {
                 }
             }
 
-            Xml_record = null;
             SpecificSprite_LoopReload();
             orig(self);
         }
+
+        private void OuiFileSelectSlotSetupHook(On.Celeste.OuiFileSelectSlot.orig_Setup orig, OuiFileSelectSlot self) {
+            if (self.FileSlot == 0) {
+                Xml_record = null;
+
+                //Reload the SpriteID registration code of "SaveFilePortraits", at this before, also remove unnecessary SpriteID of "SkinModHelper"
+                if (SaveFilePortraits) {
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
+                        if (!string.IsNullOrEmpty(config.OtherSprite_ExPath)) {
+                            string portraitsXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Portraits.xml";
+                            CombineSpriteBanks(GFX.PortraitsSpriteBank, null, portraitsXmlPath);
+                        }
+                    }
+                    foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
+                        if (!string.IsNullOrEmpty(config.OtherSprite_Path)) {
+                            string portraitsXmlPath = "Graphics/" + config.OtherSprite_Path + "/Portraits.xml";
+                            CombineSpriteBanks(GFX.PortraitsSpriteBank, null, portraitsXmlPath);
+                        }
+                    }
+                    Logger.Log("SkinModHelper", $"SaveFilePortraits reload start");
+                    SaveFilePortraits_Reload();
+                }
+            }
+            orig(self);
+        }
+
+        private static void SaveFilePortraits_Reload() {
+            SaveFilePortraitsModule.ExistingPortraits.Clear();
+
+            foreach (string portrait in GFX.PortraitsSpriteBank.SpriteData.Keys) {
+                SpriteData sprite = GFX.PortraitsSpriteBank.SpriteData[portrait];
+                foreach (string animation in sprite.Sprite.Animations.Keys) {
+                    if (animation.StartsWith("idle_") && !animation.Substring(5).Contains("_")
+                        && sprite.Sprite.Animations[animation].Frames[0].Height <= 200 && sprite.Sprite.Animations[animation].Frames[0].Width <= 200) {
+                        SaveFilePortraitsModule.ExistingPortraits.Add(new Tuple<string, string>(portrait, animation));
+                    }
+                }
+            }
+            Logger.Log("SaveFilePortraits", $"Found {SaveFilePortraitsModule.ExistingPortraits.Count} portraits to pick from.");
+        }
+
 
 
         private static string XmlCombineValue() {
@@ -841,7 +893,7 @@ namespace Celeste.Mod.SkinModHelper {
 
             if (identifier != "") {
                 //Logger.Log(LogLevel.Verbose, "SkinModHelper", $"SpriteBank identifier: {identifier}");
-                return identifier;
+                return "_" + identifier;
             }
             return null;
         }
@@ -961,7 +1013,7 @@ namespace Celeste.Mod.SkinModHelper {
         }
 
         private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait) {
-            string skinModPortraitSpriteId = portrait.SpriteId + "_" + XmlCombineValue();
+            string skinModPortraitSpriteId = portrait.SpriteId + XmlCombineValue();
             if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId)) {
                 portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
             }
@@ -1001,7 +1053,7 @@ namespace Celeste.Mod.SkinModHelper {
 
         // Combine skin mod XML with a vanilla sprite bank
         private void CombineSpriteBanks(SpriteBank origBank, string skinId, string xmlPath) {
-            SpriteBank newBank = BuildBank(origBank, xmlPath);
+            SpriteBank newBank = BuildBank(origBank, skinId, xmlPath);
             if (newBank == null) {
                 return;
             }
@@ -1011,23 +1063,38 @@ namespace Celeste.Mod.SkinModHelper {
                 string spriteId = spriteDataEntry.Key;
                 SpriteData newSpriteData = spriteDataEntry.Value;
 
-                if (origBank.SpriteData.TryGetValue(spriteId, out SpriteData origSpriteData)) {
+                if (skinId == null) {
+                    spriteId = xmlPath + "/" + spriteId;
+                    origBank.SpriteData[spriteId] = newSpriteData;
+
+                    foreach (string skinId_record in SkinModHelperModule.Xml_records.Keys) {
+                        if (origBank.SpriteData.ContainsKey(skinId_record)) {
+                            origBank.SpriteData.Remove(skinId_record);
+                        }
+                    }
+                } else if (origBank.SpriteData.TryGetValue(spriteId, out SpriteData origSpriteData)) {
                     PatchSprite(origSpriteData.Sprite, newSpriteData.Sprite);
 
-                    string newSpriteId = spriteId + "_" + skinId;
+                    string newSpriteId = spriteId + skinId;
                     origBank.SpriteData[newSpriteId] = newSpriteData;
+
+                    Xml_records[newSpriteId] = xmlPath;
                 }
             }
         }
 
 
-        private SpriteBank BuildBank(SpriteBank origBank, string xmlPath) {
+        private SpriteBank BuildBank(SpriteBank origBank, string skinId, string xmlPath) {
             try {
                 SpriteBank newBank = new(origBank.Atlas, xmlPath);
-                Logger.Log(LogLevel.Verbose, "SkinModHelper", $"Built sprite bank for {xmlPath}.");
+                if (skinId != null) {
+                    Logger.Log(LogLevel.Verbose, "SkinModHelper", $"Built sprite bank for {xmlPath}.");
+                }
                 return newBank;
             } catch (Exception e) {
-                Logger.Log(LogLevel.Warn, "SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
+                if (skinId != null) {
+                    Logger.Log(LogLevel.Warn, "SkinModHelper", $"Could not build sprite bank for {xmlPath}: {e.Message}.");
+                }
                 return null;
             }
         }
