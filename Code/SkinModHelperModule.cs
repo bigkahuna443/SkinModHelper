@@ -848,21 +848,6 @@ namespace Celeste.Mod.SkinModHelper {
             orig(self);
         }
 
-        private static void SaveFilePortraits_Reload() {
-            SaveFilePortraitsModule.ExistingPortraits.Clear();
-
-            foreach (string portrait in GFX.PortraitsSpriteBank.SpriteData.Keys) {
-                SpriteData sprite = GFX.PortraitsSpriteBank.SpriteData[portrait];
-                foreach (string animation in sprite.Sprite.Animations.Keys) {
-                    if (animation.StartsWith("idle_") && !animation.Substring(5).Contains("_")
-                        && sprite.Sprite.Animations[animation].Frames[0].Height <= 200 && sprite.Sprite.Animations[animation].Frames[0].Width <= 200) {
-                        SaveFilePortraitsModule.ExistingPortraits.Add(new Tuple<string, string>(portrait, animation));
-                    }
-                }
-            }
-            Logger.Log("SaveFilePortraits", $"Found {SaveFilePortraitsModule.ExistingPortraits.Count} portraits to pick from.");
-        }
-
 
 
         private static string XmlCombineValue() {
@@ -1064,8 +1049,13 @@ namespace Celeste.Mod.SkinModHelper {
                 SpriteData newSpriteData = spriteDataEntry.Value;
 
                 if (skinId == null) {
-                    spriteId = xmlPath + "/" + spriteId;
-                    origBank.SpriteData[spriteId] = newSpriteData;
+                    string SourcesPath = null;
+                    foreach (SpriteDataSource DataSources in newSpriteData.Sources) {
+                        SourcesPath = DataSources.Path;
+                    }
+                    string newSpriteId = SourcesPath + spriteId;
+                    origBank.SpriteData[newSpriteId] = newSpriteData;
+
 
                     foreach (string skinId_record in SkinModHelperModule.Xml_records.Keys) {
                         if (origBank.SpriteData.ContainsKey(skinId_record)) {
@@ -1196,7 +1186,21 @@ namespace Celeste.Mod.SkinModHelper {
             }
         }
 
+        // ---SaveFilePortraits---
+        private static void SaveFilePortraits_Reload() {
+            SaveFilePortraitsModule.ExistingPortraits.Clear();
 
+            foreach (string portrait in GFX.PortraitsSpriteBank.SpriteData.Keys) {
+                SpriteData sprite = GFX.PortraitsSpriteBank.SpriteData[portrait];
+                foreach (string animation in sprite.Sprite.Animations.Keys) {
+                    if (animation.StartsWith("idle_") && !animation.Substring(5).Contains("_")
+                        && sprite.Sprite.Animations[animation].Frames[0].Height <= 200 && sprite.Sprite.Animations[animation].Frames[0].Width <= 200) {
+                        SaveFilePortraitsModule.ExistingPortraits.Add(new Tuple<string, string>(portrait, animation));
+                    }
+                }
+            }
+            Logger.Log("SaveFilePortraits", $"Found {SaveFilePortraitsModule.ExistingPortraits.Count} portraits to pick from.");
+        }
 
 
 
