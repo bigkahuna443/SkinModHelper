@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Mono.Cecil.Cil;
-using System.IO;
 
 using Celeste.Mod.JungleHelper;
 using Celeste.Mod.SaveFilePortraits;
@@ -92,7 +91,7 @@ namespace Celeste.Mod.SkinModHelper {
 
             On.Monocle.SpriteBank.Create += SpriteBankCreateHook;
             On.Monocle.SpriteBank.CreateOn += SpriteBankCreateOnHook;
-            
+
             On.Celeste.LevelLoader.LoadingThread += LevelLoaderLoadingThreadHook;
             On.Celeste.GameLoader.LoadThread += GameLoaderLoadThreadHook;
             On.Celeste.OuiFileSelectSlot.Setup += OuiFileSelectSlotSetupHook;
@@ -781,27 +780,8 @@ namespace Celeste.Mod.SkinModHelper {
             return orig(self, id);
         }
 
-        // We only need this for file select : )
         private void GameLoaderLoadThreadHook(On.Celeste.GameLoader.orig_LoadThread orig, GameLoader self) {
             orig(self);
-            string skinId = Xml_record = XmlCombineValue();
-
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
-                if (Settings.ExtraXmlList.ContainsKey(config.SkinName)) {
-                    if (Settings.ExtraXmlList[config.SkinName] && !string.IsNullOrEmpty(config.OtherSprite_ExPath)) {
-                        string portraitsXmlPath = "Graphics/" + config.OtherSprite_ExPath + "/Portraits.xml";
-                        CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
-                    }
-                }
-            }
-            if (Player_Skinid_verify != 0) {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
-                    if (Player_Skinid_verify == config.hashValues[1] && !string.IsNullOrEmpty(config.OtherSprite_Path)) {
-                        string portraitsXmlPath = "Graphics/" + config.OtherSprite_Path + "/Portraits.xml";
-                        CombineSpriteBanks(GFX.PortraitsSpriteBank, skinId, portraitsXmlPath);
-                    }
-                }
-            }
         }
 
         // Wait until the main sprite bank is created, then combine with our skin mod banks
@@ -819,6 +799,7 @@ namespace Celeste.Mod.SkinModHelper {
                 }
             }
 
+            Xml_record = null;
             SpecificSprite_LoopReload();
             orig(self);
         }
@@ -1055,7 +1036,6 @@ namespace Celeste.Mod.SkinModHelper {
                     }
                     string newSpriteId = SourcesPath + spriteId;
                     origBank.SpriteData[newSpriteId] = newSpriteData;
-
 
                     foreach (string skinId_record in SkinModHelperModule.Xml_records.Keys) {
                         if (origBank.SpriteData.ContainsKey(skinId_record)) {
