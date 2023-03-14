@@ -30,10 +30,15 @@ namespace Celeste.Mod.SkinModHelper {
         public Dictionary<string, bool> ExtraXmlList { get; set; } = new();
 
 
+        [SettingIgnore]
+        public bool FreeCollocations_OffOn { get; set; }
 
-
-
-
+        [SettingIgnore]
+        public Dictionary<string, string> FreeCollocations_Sprites { get; set; } = new();
+        [SettingIgnore]
+        public Dictionary<string, string> FreeCollocations_Portraits { get; set; } = new();
+        [SettingIgnore]
+        public Dictionary<string, string> FreeCollocations_OtherExtra { get; set; } = new();
 
 
 
