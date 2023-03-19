@@ -52,20 +52,6 @@ Then, you need to set a PlayerSkin ID for the SkinName information you wrote, us
   Character_ID: [your new Player ID]     # this also needs you to Create a "Sprites.Xml", will be detailed description later
 ```
 
-Specific Player Sprite
------------------------------------
-A player skin has some skin textures that cannot be easily replaced in vanilla, 
-such as the "bangs" and "startStarFlyWhite" textures.
-
-Skin Mod Helper will make those textures no longer use "characters/player" root path, 
-Then try to use "characters/[Character_ID]" as the new root path.
-
-If you don't want to do that, and if you want to manually set a more unique new root path, then you can use this:
-```
-  SpecificPlayerSprite_Path: [path to the root directory of some specific texture]     
-    # Path's starting point is "Graphics/Atlases/Gameplay/"
-```
-
 HairColors
 -----------------------------------
 If you want your player skin to have a new hair color, other than the default maddy's color, 
@@ -100,6 +86,20 @@ If, the skin you make is a player skin. then we have these things:
    * Use the "player_badeline" ID of vanilla as a guide -- that new ID should have all animations
    * Note: If the new ID does not match "[Character_ID]". Then it will directly crash the game
 
+
+Specific Player Sprite
+-----------------------------------
+A player skin has some skin textures that cannot be easily replaced in vanilla, 
+such as the "bangs" and "startStarFlyWhite" textures.
+
+Skin Mod Helper will make those textures no longer use "characters/player" root path, 
+Then try to use "[SourcesPath of Character_ID in sprites.xml]" as the new root path.
+
+If you don't want to do that, and if you want to manually set a more unique new root path, then you can use this:
+```
+  SpecificPlayerSprite_Path: [path to the root directory of some specific texture]     
+    # Path's starting point is "Graphics/Atlases/Gameplay/"
+```
 
 OtherSprite
 -----------------------------------
@@ -138,7 +138,7 @@ If your skin type is "Player Skin", Then We need to use some more content to let
   Player_List: true    # Affects the "Player Skin" option
   Silhouette_List: true    # Affects the "Silhouette Skin" option
 ```
-If your skin type is "non-Player Skin", Then when you set "[OtherSprite_ExPath]" after, them will appear in "Extra Settings" list
+If your skin type is "non-Player Skin", Then when you set "[OtherSprite_ExPath]" after, them will appear in "General Skin" list
 
 
 hashSeed
@@ -214,12 +214,12 @@ creating a small image named death_particle.png and place it in your "[SpecificP
 as the only color -- it will be filled in by your current hair color on death.
    * For reference, the vanilla death particle is an 8x8 white circle (hair00.png).
 
-3. A few extra things that can be reskinned:
+3. A few extra things that can be reskinned
    * The particles for feathers: "../Gameplay/[OtherSprite_Path]/particles/feather.png"
    * The particles for dream blocks: "../Gameplay/[OtherSprite_Path]/objects/dreamblock/particles.png"
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
-   * The bangs for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_bangs[number].png"
-   * The hair for NPC badeline: "../Gameplay/[OtherSprite_Path]/badeline_hair00.png"
+   * The new bangs for all hasHair-ID in Sprites.xml: "../Gameplay/[IDself's SourcesPath]/bangs[number].png"
+   * The new hair for all hasHair-ID in Sprites.xml: "../Gameplay/[IDself's SourcesPath]/hair00.png"
 
 Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
 
@@ -231,7 +231,7 @@ If your skin is not be registered (or does not appear in the menu):
 * Make sure your configuration file is named correctly and in the right place
 * Check your log to see your skin report anything when trying to register
 * If the log says nothing, see this section: 
-  [let your skin appear in Mod-Options](https://github.com/AAA1459/SkinModHelper/edit/backup/docs/guide/README.md#let-your-skin-appear-in-mod-options)
+  [let your skin appear in Mod-Options](https://github.com/AAA1459/SkinModHelper/blob/dev/docs/guide/README.md#let-your-skin-appear-in-mod-options)
 
 If your sprites/portraits are not appearing in-game:
 * Make sure your XML is valid. You can compare to the vanilla files or use an [online syntax checker](https://www.xmlvalidation.com/)

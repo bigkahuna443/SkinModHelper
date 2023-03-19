@@ -59,7 +59,7 @@ namespace Celeste.Mod.SkinModHelper
             }
 
             // Set our update action on our complete menu
-            skinSelectMenu.Change(skinId => SkinModHelperModule.UpdateSkin(skinId));
+            skinSelectMenu.Change(skinId => SkinModHelperModule.UpdateSkin(skinId, inGame));
 
             if (Disabled(inGame)) {
                 skinSelectMenu.Disabled = true;
