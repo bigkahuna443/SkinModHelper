@@ -211,6 +211,12 @@ namespace Celeste.Mod.SkinModHelper {
                 Xmls_record = skinId;
 
                 UpdateParticles();
+                foreach (string SpriteID in SpriteSkins_records.Keys) {
+                    SpriteSkin_record[SpriteID] = null;
+                }
+                foreach (string SpriteID in PortraitsSkins_records.Keys) {
+                    PortraitsSkin_record[SpriteID] = null;
+                }
 
                 bool Selected = false;
                 foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
@@ -964,7 +970,7 @@ namespace Celeste.Mod.SkinModHelper {
             int sort = 0;
             string identifier = "";
             foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
-                if (Settings.ExtraXmlList.ContainsKey(config.SkinName)) {
+                if (Settings.ExtraXmlList.ContainsKey(config.SkinName) && Settings.ExtraXmlList[config.SkinName]) {
                     if (sort == 0) {
                         identifier = (sort + "_" + config.SkinName);
                         sort += 1;
@@ -1630,7 +1636,7 @@ namespace Celeste.Mod.SkinModHelper {
                         Logger.Log(LogLevel.Warn, "SkinModHelper", $"{hash_object} unset JungleLanternMode to true, will cancel this jungle-jump");
                     } else {
                         if (!backpackOn && skinConfigs.ContainsKey(hash_object + "_NB")) {
-                            if (!skinConfigs[hash_object].JungleLanternMode) {
+                            if (!skinConfigs[hash_object + "_NB"].JungleLanternMode) {
                                 Logger.Log(LogLevel.Warn, "SkinModHelper", $"{hash_object + "_NB"} unset JungleLanternMode to true, will jungle-jump to {hash_object}");
                             } else {
                                 hash_object = hash_object + "_NB";
