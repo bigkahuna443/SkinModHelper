@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Mono.Cecil.Cil;
 using Celeste.Mod.UI;
-using Celeste.Mod;
+using System.Xml;
 
 using Celeste.Mod.JungleHelper;
 using Celeste.Mod.SaveFilePortraits;
@@ -29,7 +29,13 @@ namespace Celeste.Mod.SkinModHelper {
         };
 
         public override Type SettingsType => typeof(SkinModHelperSettings);
+        public override Type SessionType => typeof(SkinModHelperSession);
+
+
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
+        public static SkinModHelperSession Session => (SkinModHelperSession)Instance._Session;
+
+
 
 
         public static SkinModHelperUI UI;
@@ -49,6 +55,7 @@ namespace Celeste.Mod.SkinModHelper {
         public static Dictionary<string, List<string>> OtherSkins_records;
 
         private static ILHook TextboxRunRoutineHook;
+        private static ILHook MiniTextboxCtorHook;
         private static ILHook TempleFallCoroutineHook;
 
         private static Hook Jungle_Hook_Update;
@@ -122,9 +129,10 @@ namespace Celeste.Mod.SkinModHelper {
 
             IL.Celeste.DeathEffect.Draw += DeathEffectDrawHook;
             IL.Celeste.DreamBlock.ctor_Vector2_float_float_Nullable1_bool_bool_bool += DreamBlockHook;
-
+            
             IL.Celeste.FlyFeather.ctor_Vector2_bool_bool += FlyFeatherHook;
             IL.Celeste.CS06_Campfire.Question.ctor += CampfireQuestionHook;
+            IL.Celeste.MiniTextbox.ctor += SwapTextboxHook;
             
             TextboxRunRoutineHook = new ILHook(
                 typeof(Textbox).GetMethod("RunRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget(),
@@ -182,6 +190,7 @@ namespace Celeste.Mod.SkinModHelper {
             
             IL.Celeste.FlyFeather.ctor_Vector2_bool_bool -= FlyFeatherHook;
             IL.Celeste.CS06_Campfire.Question.ctor -= CampfireQuestionHook;
+            IL.Celeste.MiniTextbox.ctor -= SwapTextboxHook;
             TextboxRunRoutineHook.Dispose();
             TempleFallCoroutineHook.Dispose();
 
@@ -263,15 +272,25 @@ namespace Celeste.Mod.SkinModHelper {
             }
 
 
-            if (!isGhost && (mode == PlayerSpriteMode.Madeline || mode == PlayerSpriteMode.MadelineNoBackpack || mode == PlayerSpriteMode.MadelineAsBadeline) && UniqueSkinSelected()) {
-                mode = (PlayerSpriteMode)skinConfigs[Settings.SelectedPlayerSkin].hashValues[1];
-                if (!backpackOn && UniqueSkinSelected("_NB")) {
-                    mode = (PlayerSpriteMode)skinConfigs[Settings.SelectedPlayerSkin + "_NB"].hashValues[1];
+            if (!isGhost && (mode == PlayerSpriteMode.Madeline || mode == PlayerSpriteMode.MadelineNoBackpack || mode == PlayerSpriteMode.MadelineAsBadeline)) {
+
+                string hash_object = Session.SessionPlayerSkin == null ? Settings.SelectedPlayerSkin : Session.SessionPlayerSkin;
+                if (skinConfigs.ContainsKey(hash_object)) {
+                    mode = (PlayerSpriteMode)skinConfigs[hash_object].hashValues[1];
+
+                    if (!backpackOn && skinConfigs.ContainsKey(hash_object + "_NB")) {
+                        mode = (PlayerSpriteMode)skinConfigs[hash_object + "_NB"].hashValues[1];
+                    }
                 }
-            } else if (!isGhost && mode == PlayerSpriteMode.Playback && UniqueSilhouetteSelected()) {
-                mode = (PlayerSpriteMode)skinConfigs[Settings.SelectedSilhouetteSkin].hashValues[1];
-                if (!backpackOn && UniqueSilhouetteSelected("_NB")) {
-                    mode = (PlayerSpriteMode)skinConfigs[Settings.SelectedSilhouetteSkin + "_NB"].hashValues[1];
+            } else if (!isGhost && mode == PlayerSpriteMode.Playback) {
+
+                string hash_object = Session.SessionSilhouetteSkin == null ? Settings.SelectedSilhouetteSkin : Session.SessionSilhouetteSkin;
+                if (skinConfigs.ContainsKey(hash_object)) {
+                    mode = (PlayerSpriteMode)skinConfigs[hash_object].hashValues[1];
+
+                    if (!backpackOn && skinConfigs.ContainsKey(hash_object + "_NB")) {
+                        mode = (PlayerSpriteMode)skinConfigs[hash_object + "_NB"].hashValues[1];
+                    }
                 }
             } else if (isGhost) {
                 selfData["isGhost"] = true;
@@ -757,24 +776,17 @@ namespace Celeste.Mod.SkinModHelper {
             DynData<PlayerSprite> spriteData = new DynData<PlayerSprite>(self.Sprite);
 
             string spriteID = (string)spriteData["spriteName"];
-            string spriteID_orig = spriteID;
-            if (SpriteSkin_record.ContainsKey(spriteID)) {
-                spriteID = spriteID + SpriteSkin_record[spriteID];
+            if (spriteData["HairPath"] == null && SpriteSkin_record.ContainsKey(spriteID)) {
+                spriteData["HairPath"] = spriteID + SpriteSkin_record[spriteID];
             }
+            string HairPath = spriteData["HairPath"] == null ? spriteID : (string)spriteData["HairPath"];
 
-            if (spritesWithHair.Contains((string)spriteData["spriteName"]) && GFX.SpriteBank.SpriteData.ContainsKey(spriteID)) {
 
-                string SourcesPath = null;
-                foreach (SpriteDataSource DataSources in GFX.SpriteBank.SpriteData[spriteID].Sources) {
-                    SourcesPath = DataSources.Path;
-                }
+            if (spritesWithHair.Contains(spriteID) && GFX.SpriteBank.SpriteData.ContainsKey(HairPath)) {
+                string SourcesPath = GFX.SpriteBank.SpriteData[HairPath].Sources[0].Path;
 
-               
                 if (index == 0) {
-                    string bangs = "bangs";
-                    if (!SpriteSkin_record.ContainsKey((string)spriteData["spriteName"]) || SpriteSkin_record[(string)spriteData["spriteName"]] == null) {
-                        bangs = GetReskinPath(GFX.Game, "bangs", true, false, false, (int)self.Sprite.Mode, true);
-                    }
+                    string bangs = spriteID == HairPath ? GetReskinPath(GFX.Game, "bangs", true, false, false, (int)self.Sprite.Mode, true) : "bangs";
 
                     if (bangs == "bangs") {
                         bangs = SourcesPath + "bangs";
@@ -788,10 +800,7 @@ namespace Celeste.Mod.SkinModHelper {
                         return newbangs.Count > self.Sprite.HairFrame ? newbangs[self.Sprite.HairFrame] : newbangs[0];
                     }
                 } else {
-                    string newhair = "hair00";
-                    if (!SpriteSkin_record.ContainsKey((string)spriteData["spriteName"]) || SpriteSkin_record[(string)spriteData["spriteName"]] == null) {
-                        newhair = GetReskinPath(GFX.Game, "hair00", true, false, false, (int)self.Sprite.Mode);
-                    }
+                    string newhair = spriteID == HairPath ? GetReskinPath(GFX.Game, "hair00", true, false, false, (int)self.Sprite.Mode) : "hair00";
 
                     if (newhair == "hair00") {
                         newhair = SourcesPath + "hair00";
@@ -876,20 +885,20 @@ namespace Celeste.Mod.SkinModHelper {
             }
             return orig(self, id);
         }
-
+        
         private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait) {
 
-            string skinModPortraitSpriteId = portrait.SpriteId;
+            string skinId = portrait.SpriteId;
 
             foreach (string SpriteId in PortraitsSkin_record.Keys) {
                 //Ignore case of string
-                if (string.Compare(SpriteId, skinModPortraitSpriteId, true) == 0) {
-                    skinModPortraitSpriteId = SpriteId + PortraitsSkin_record[SpriteId];
+                if (string.Compare(SpriteId, skinId, true) == 0) {
+                    skinId = SpriteId + PortraitsSkin_record[SpriteId];
                 }
             }
 
-            if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId)) {
-                portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
+            if (GFX.PortraitsSpriteBank.Has(skinId)) {
+                portrait.Sprite = skinId.Replace("portrait_", "");
             }
             return portrait;
         }
@@ -1125,30 +1134,19 @@ namespace Celeste.Mod.SkinModHelper {
 
         // ReplacePortraitPath makes textbox path funky, so correct to our real path or revert to vanilla if it does not exist
         private static string ReplaceTextboxPath(string textboxPath) {
-            string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
 
-            string CustomPath = null;
-            foreach (SkinModHelperConfig config in SkinModHelperModule.OtherskinConfigs.Values) {
-                if (Settings.ExtraXmlList.ContainsKey(config.SkinName)) {
-                    if (Settings.ExtraXmlList[config.SkinName] && !string.IsNullOrEmpty(config.OtherSprite_ExPath)) {
-                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_ExPath + "/" + originalPortraitId + "_ask")) {
-                            CustomPath = config.OtherSprite_ExPath;
-                        }
-                    }
-                }
-            }
-            if (Player_Skinid_verify != 0) {
-                foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values) {
-                    if (Player_Skinid_verify == config.hashValues[1] && !string.IsNullOrEmpty(config.OtherSprite_Path)) {
-                        if (GFX.Portraits.Has("textbox/" + config.OtherSprite_Path + "/" + originalPortraitId + "_ask")) {
-                            CustomPath = config.OtherSprite_Path;
-                        }
-                    }
+            string PortraitId = "portrait_" + textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[skin id]_ask"
+
+            if (GFX.PortraitsSpriteBank.Has(PortraitId)) {
+                string SourcesPath = GFX.PortraitsSpriteBank.SpriteData[PortraitId].Sources[0].XML.Attr("textbox");
+
+                textboxPath = SourcesPath == null ? "textbox/madeline_ask" : "textbox/" + SourcesPath + "_ask";
+                if (!GFX.Portraits.Has(textboxPath)) {
+                    Logger.Log(LogLevel.Warn, "SkinModHelper", $"Requested texture that does not exist: {textboxPath}");
+                    textboxPath = "textbox/madeline_ask";
                 }
             }
 
-            string newTextboxPath = "textbox/" + CustomPath + "/" + originalPortraitId + "_ask";
-            textboxPath = (CustomPath != null && GFX.Portraits.Has(newTextboxPath)) ? newTextboxPath : "textbox/" + originalPortraitId + "_ask";
             return textboxPath;
         }
 
@@ -1307,14 +1305,13 @@ namespace Celeste.Mod.SkinModHelper {
                 if (string.IsNullOrEmpty(config.SpecificPlayerSprite_Path)) {
 
                     string SourcesPath = null;
-                    if (GFX.SpriteBank.Has(config.Character_ID)) {
-                        foreach (SpriteDataSource DataSources in GFX.SpriteBank.SpriteData[config.Character_ID].Sources) {
-                            SourcesPath = DataSources.Path;
-                        }
+                    if (GFX.SpriteBank.SpriteData.ContainsKey(config.Character_ID)) {
+                        SourcesPath = GFX.SpriteBank.SpriteData[config.Character_ID].Sources[0].Path;
+
+
                         if (SourcesPath.EndsWith("/")) {
                             SourcesPath = SourcesPath.Remove(SourcesPath.LastIndexOf("/"), 1);
                         }
-
                         SP_Path[config.SkinName] = SourcesPath;
                     } else {
                         Logger.Log(LogLevel.Error, "SkinModHelper", $"{config.SkinName}'s '{config.Character_ID}' exist't in Graphics/Sprites.xml, this will make crash the game ");
@@ -1386,19 +1383,29 @@ namespace Celeste.Mod.SkinModHelper {
 
 
 
-        // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
         public static void UpdateSkin(string newSkinId, bool inGame = false) {
+            if (Session != null) {
+                Session.SessionPlayerSkin = null;
+            }
+
             Settings.SelectedPlayerSkin = newSkinId;
             RefreshPlayerSpriteMode();
-
-            if (!inGame) {
-                Player_Skinid_verify = skinConfigs[Settings.SelectedPlayerSkin].hashValues[1];
+            if (!inGame && skinConfigs.ContainsKey(newSkinId)) {
+                Player_Skinid_verify = skinConfigs[newSkinId].hashValues[1];
             }
         }
         public static void UpdateSilhouetteSkin(string newSkinId) {
+            if (Session != null) {
+                Session.SessionSilhouetteSkin = null;
+            }
+
             Settings.SelectedSilhouetteSkin = newSkinId;
         }
         public static void UpdateExtraXml(string SkinId, bool OnOff) {
+            if (Session != null && Session.SessionExtraXml.ContainsKey(SkinId)) {
+                Session.SessionExtraXml.Remove(SkinId);
+            }
+
             Settings.ExtraXmlList[SkinId] = OnOff;
         }
 
@@ -1460,11 +1467,8 @@ namespace Celeste.Mod.SkinModHelper {
 
 
         public static string getSkinDefaultValues(SpriteBank selfBank, string SpriteID) {
-
-            foreach (SkinModHelperConfig config in skinConfigs.Values) {
-                if (Player_Skinid_verify == config.hashValues[1] && selfBank.Has(SpriteID + $"{config.hashValues[1]}")) {
-                    return $"{config.hashValues[1]}";
-                }
+            if (selfBank.Has(SpriteID + $"{Player_Skinid_verify}")) {
+                return $"{Player_Skinid_verify}";
             }
             string SkinID = null;
             foreach (SkinModHelperConfig config in OtherskinConfigs.Values) {
@@ -1572,12 +1576,10 @@ namespace Celeste.Mod.SkinModHelper {
             List<string> Sources_record = new();
 
             foreach (string portrait in GFX.PortraitsSpriteBank.SpriteData.Keys) {
-                SpriteData sprite = GFX.PortraitsSpriteBank.SpriteData[portrait];
 
-                string SourcesPath = null;
-                foreach (SpriteDataSource DataSources in sprite.Sources) {
-                    SourcesPath = DataSources.Path;
-                }
+                SpriteData sprite = GFX.PortraitsSpriteBank.SpriteData[portrait];
+                string SourcesPath = sprite.Sources[0].Path;
+
                 if (!Sources_record.Contains(SourcesPath)) {
                     Sources_record.Add(SourcesPath);
 
@@ -1620,17 +1622,18 @@ namespace Celeste.Mod.SkinModHelper {
             if (hasLantern) {
                 mode = SaveData.Instance.Assists.PlayAsBadeline ? (PlayerSpriteMode)444483 : (PlayerSpriteMode)444482;
 
-                if (UniqueSkinSelected("_lantern")) {
-                    string hash_object = Settings.SelectedPlayerSkin + "_lantern";
+                string hash_object = Session.SessionPlayerSkin == null ? Settings.SelectedPlayerSkin + "_lantern" : Session.SessionPlayerSkin + "_lantern";
+
+                if (skinConfigs.ContainsKey(hash_object)) {
+
                     if (!skinConfigs[hash_object].JungleLanternMode) {
                         Logger.Log(LogLevel.Warn, "SkinModHelper", $"{hash_object} unset JungleLanternMode to true, will cancel this jungle-jump");
                     } else {
-                        if (!backpackOn && UniqueSkinSelected("_lantern_NB")) {
-                            hash_object = Settings.SelectedPlayerSkin + "_lantern_NB";
-
+                        if (!backpackOn && skinConfigs.ContainsKey(hash_object + "_NB")) {
                             if (!skinConfigs[hash_object].JungleLanternMode) {
-                                hash_object = Settings.SelectedPlayerSkin + "_lantern";
                                 Logger.Log(LogLevel.Warn, "SkinModHelper", $"{hash_object + "_NB"} unset JungleLanternMode to true, will jungle-jump to {hash_object}");
+                            } else {
+                                hash_object = hash_object + "_NB";
                             }
                         }
                         Player_Skinid_verify = skinConfigs[hash_object].hashValues[1];
