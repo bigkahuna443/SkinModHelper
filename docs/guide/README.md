@@ -220,10 +220,7 @@ as the only color -- it will be filled in by your current hair color on death.
       * Use the vanilla image as a guide -- you need to space out the three particle sizes in a specific way for them to be used correctly.
    * The new bangs for all hasHair-ID in Sprites.xml: "../Gameplay/[IDself's SourcesPath]/bangs[number].png"
    * The new hair for all hasHair-ID in Sprites.xml: "../Gameplay/[IDself's SourcesPath]/hair00.png"
-
-Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
-
-
+* Note: some specific sprites's reskin path, can also use [OtherSprite_ExPath] to complete the reskin for them
 
 Troubleshooting
 -----------------------
@@ -231,7 +228,7 @@ If your skin is not be registered (or does not appear in the menu):
 * Make sure your configuration file is named correctly and in the right place
 * Check your log to see your skin report anything when trying to register
 * If the log says nothing, see this section: 
-  [let your skin appear in Mod-Options](https://github.com/AAA1459/SkinModHelper/blob/dev/docs/guide/README.md#let-your-skin-appear-in-mod-options)
+  [let your skin appear in Mod-Options](../../docs/guide/README.md#let-your-skin-appear-in-mod-options)
 
 If your sprites/portraits are not appearing in-game:
 * Make sure your XML is valid. You can compare to the vanilla files or use an [online syntax checker](https://www.xmlvalidation.com/)
@@ -250,6 +247,19 @@ If you get crashes:
 If you want to find all vanilla textures (png format):
 * You can find it here: [Celeste Graphics Dump v1400](https://drive.google.com/file/d/1ITwCI2uJ7YflAG0OwBR4uOUEJBjwTCet/view)
 
+If the some texture of your skin is misaligned, how do we fix it (alternate solution):
+1. create a .mate.yaml flie with the same name for a textures in the same folder.
+2. write some information of that texture in that .mate.yaml flie, be like following.
+```
+X: [X offset value in Game]
+Y: [Y offset value in Game]
+Width: [The Width of the png]
+Height: [The Height of the png]
+Premultiplied: [true/false, i don't kown about more]
+```
+3. you can use a .mate.yaml file in vanilla for any textures, it has nothing to do with skinmodhelper
+
+finally:
 This process can be pretty involved, especially if you are porting over an existing skin mod,
 so feel free to [contact me](../../README.md#contact) if you need help, find an issue, or would
 like a new feature supported! You can also use a currently supported skin mod as a reference.
