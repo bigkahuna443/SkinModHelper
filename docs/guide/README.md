@@ -248,16 +248,16 @@ If you want to find all vanilla textures (png format):
 * You can find it here: [Celeste Graphics Dump v1400](https://drive.google.com/file/d/1ITwCI2uJ7YflAG0OwBR4uOUEJBjwTCet/view)
 
 If the some texture of your skin is misaligned, how do we fix it (alternate solution):
-1. create a .mate.yaml flie with the same name for a textures in the same folder.
-2. write some information of that texture in that .mate.yaml flie, be like following.
+1. create a .meta.yaml flie with the same name for a textures in the same folder.
+2. write some information of that texture in that .meta.yaml flie, be like following.
 ```
-X: [X offset value in Game]
-Y: [Y offset value in Game]
+X: [X offset value]     # If no special case, please set X or Y to 0
+Y: [Y offset value]
 Width: [The Width of the png]
 Height: [The Height of the png]
-Premultiplied: [true/false, i don't kown about more]
+Premultiplied: [true/false]     # I don't know about this
 ```
-3. you can use a .mate.yaml file in vanilla for any textures, it has nothing to do with skinmodhelper
+* run-worked of the .mate.yaml file no need skinmodhelper
 
 finally:
 This process can be pretty involved, especially if you are porting over an existing skin mod,
