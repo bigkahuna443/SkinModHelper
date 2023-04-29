@@ -27,6 +27,9 @@
         <Reference Include="$(CelestePrefix)\Celeste.exe" />
         <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll" />
         <Reference Include="$(CelestePrefix)\YamlDotNet.dll" />
+        <Reference Include="JungleHelper">
+          <HintPath>..\..\JungleHelper\Code\bin\Debug\JungleHelper.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <Choose>
@@ -56,6 +59,14 @@
     
     <PropertyGroup>
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+        <ApplicationIcon />
+        <OutputType>Library</OutputType>
+        <StartupObject />
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DefineConstants>TRACE</DefineConstants>
     </PropertyGroup>
 
 </Project>
