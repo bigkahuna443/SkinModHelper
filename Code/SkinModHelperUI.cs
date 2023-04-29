@@ -78,7 +78,7 @@ namespace Celeste.Mod.SkinModHelper
             foreach (SkinModHelperConfig config in SkinModHelperModule.skinConfigs.Values)
             {
                 bool selected = config.SkinName == SkinModHelperModule.Settings.SelectedSilhouetteSkin;
-                string name = Dialog.Clean("SkinModHelper_Silhouette_" + config.SkinName);
+                string name = Dialog.Clean("SkinModHelper_Player_" + config.SkinName);
                 if (config.Silhouette_List)
                 {
                     skinSelectMenu.Add(name, config.SkinName, selected);

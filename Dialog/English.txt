@@ -39,7 +39,8 @@ SkinModHelper_anyXmls_Default= Default / Current skin
 
 SkinModHelper_Sprite_badeline= {+MENU_VARIANT_PLAYASBADELINE}
 SkinModHelper_Sprite_player_playback= Silhouette
-SkinModHelper_Sprite_cloudRemix= Crumble cloud
+
+SkinModHelper_Sprite_cloudRemix= Small cloud
 SkinModHelper_Sprite_booster= Green bubble
 SkinModHelper_Sprite_boosterRed= Red bubble
 SkinModHelper_Sprite_glider= Jellyfish
