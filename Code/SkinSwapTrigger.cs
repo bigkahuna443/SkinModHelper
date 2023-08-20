@@ -13,7 +13,7 @@ namespace Celeste.Mod.SkinModHelper {
             skinId = data.Attr("skinId", SkinModHelperModule.DEFAULT);
             revertOnLeave = data.Bool("revertOnLeave", false);
 
-            oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
+            oldSkinId = SkinModHelperModule.Session.SkinOverride;
         }
 
         public override void OnEnter(Player player) {
@@ -24,13 +24,13 @@ namespace Celeste.Mod.SkinModHelper {
             }
 
             oldSkinId = SkinModHelperModule.Settings.SelectedSkinMod;
-            SkinModHelperModule.UpdateSkin(skinId);
+            SkinModHelperModule.SetSessionSkin(skinId);
         }
 
         public override void OnLeave(Player player) {
             base.OnLeave(player);
             if (revertOnLeave) {
-                SkinModHelperModule.UpdateSkin(oldSkinId);
+                SkinModHelperModule.SetSessionSkin(oldSkinId);
             }
         }
     }
