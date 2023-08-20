@@ -6,5 +6,13 @@ namespace Celeste.Mod.SkinModHelper {
         internal static void Load() {
             typeof(SkinModHelperInterop).ModInterop();
         }
+
+        public static void ApplySkinGlobal(string newSkin) {
+            SkinModHelperModule.UpdateSkin(newSkin);
+        }
+
+        public static void ApplySkinSession(string newSkin) {
+            SkinModHelperModule.SetSessionSkin(newSkin);
+        }
     }
 }

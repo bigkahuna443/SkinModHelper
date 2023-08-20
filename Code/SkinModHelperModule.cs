@@ -18,7 +18,9 @@ namespace Celeste.Mod.SkinModHelper {
         public static readonly int MAX_DASHES = 5;
 
         public override Type SettingsType => typeof(SkinModHelperSettings);
+        public override Type SessionType => typeof(SkinModHelperSession);
         public static SkinModHelperSettings Settings => (SkinModHelperSettings)Instance._Settings;
+        public static SkinModHelperSession Session => (SkinModHelperSession)Instance._Session;
 
         public static SkinModHelperUI UI;
 
@@ -28,6 +30,17 @@ namespace Celeste.Mod.SkinModHelper {
         {
             "player", "player_no_backpack", "badeline", "player_badeline", "player_playback"
         };
+
+        /// <summary>
+        /// Gets the currently active skin mod
+        /// </summary>
+        public static string ActiveSkinMod {
+            get {
+                string skin = Session?.SkinOverride ?? Settings?.SelectedSkinMod;
+                if (string.IsNullOrEmpty(skin) || !skinConfigs.ContainsKey(skin)) return DEFAULT;
+                return skin;
+            }
+        }
 
         public SkinModHelperModule() {
             Instance = this;
@@ -148,12 +161,15 @@ namespace Celeste.Mod.SkinModHelper {
             if (Settings.SelectedSkinMod == null || !skinConfigs.ContainsKey(Settings.SelectedSkinMod)) {
                 Settings.SelectedSkinMod = DEFAULT;
             }
+            if (Session?.SkinOverride != null && !skinConfigs.ContainsKey(Session.SkinOverride)) {
+                Session.SkinOverride = null;
+            }
         }
 
         private void PlayerRenderHook(On.Celeste.Player.orig_Render orig, Player self) {
             if (UniqueSkinSelected()) {
                 int dashCount = Math.Min(self.Dashes, MAX_DASHES);
-                string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
+                string colorGradePath = skinConfigs[ActiveSkinMod].GetUniquePath() + "dash";
 
                 // Default to two-dash color grade if we don't have one for higher dash counts
                 while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount)) {
@@ -180,7 +196,7 @@ namespace Celeste.Mod.SkinModHelper {
             DynData<PlayerDeadBody> deadBody = new(self);
             int dashCount = deadBody.Get<Player>("player").Dashes;
             if (UniqueSkinSelected()) {
-                string colorGradePath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "dash";
+                string colorGradePath = skinConfigs[ActiveSkinMod].GetUniquePath() + "dash";
 
                 while (dashCount > 2 && !GFX.ColorGrades.Has(colorGradePath + dashCount)) {
                     dashCount--;
@@ -205,14 +221,14 @@ namespace Celeste.Mod.SkinModHelper {
         private MTexture PlayerHairGetHairTextureHook(On.Celeste.PlayerHair.orig_GetHairTexture orig, PlayerHair self, int index) {
             if (UniqueSkinSelected()) {
                 if (index == 0) {
-                    string newBangsPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/bangs";
+                    string newBangsPath = skinConfigs[ActiveSkinMod].GetUniquePath() + "characters/player/bangs";
                     if (GFX.Game.Has(newBangsPath + "00")) {
                         List<MTexture> bangsTextures = GFX.Game.GetAtlasSubtextures(newBangsPath);
                         return bangsTextures.Count > self.Sprite.HairFrame ? bangsTextures[self.Sprite.HairFrame] : bangsTextures[0];
                     }
                 }
 
-                string newHairPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "characters/player/hair00";
+                string newHairPath = skinConfigs[ActiveSkinMod].GetUniquePath() + "characters/player/hair00";
                 if (GFX.Game.Has(newHairPath)) {
                     return GFX.Game[newHairPath];
                 }
@@ -225,13 +241,13 @@ namespace Celeste.Mod.SkinModHelper {
             orig(self, applyGravity);
             if (UniqueSkinSelected() && self.StateMachine.State != Player.StStarFly) {
                 int dashCount = self.Dashes < 0 ? 0 : Math.Min(self.Dashes, MAX_DASHES);
-                self.Hair.Color = skinConfigs[Settings.SelectedSkinMod].GeneratedHairColors[dashCount];
+                self.Hair.Color = skinConfigs[ActiveSkinMod].GeneratedHairColors[dashCount];
             }
         }
 
         // If our current skinmod has an overridden sprite bank, use that sprite data instead
         private Sprite SpriteBankCreateOnHook(On.Monocle.SpriteBank.orig_CreateOn orig, SpriteBank self, Sprite sprite, string id) {
-            string newId = id + "_" + Settings.SelectedSkinMod;
+            string newId = id + "_" + ActiveSkinMod;
             if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
@@ -240,7 +256,7 @@ namespace Celeste.Mod.SkinModHelper {
         }
 
         private Sprite SpriteBankCreateHook(On.Monocle.SpriteBank.orig_Create orig, SpriteBank self, string id) {
-            string newId = id + "_" + Settings.SelectedSkinMod;
+            string newId = id + "_" + ActiveSkinMod;
             if (self.SpriteData.ContainsKey(newId)) {
                 id = newId;
             }
@@ -318,7 +334,7 @@ namespace Celeste.Mod.SkinModHelper {
 
         private static string GetReskinPath(string orig) {
             if (UniqueSkinSelected()) {
-                string newPath = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + orig;
+                string newPath = skinConfigs[ActiveSkinMod].GetUniquePath() + orig;
                 return GFX.Game.Has(newPath) ? newPath : orig;
             }
 
@@ -362,7 +378,7 @@ namespace Celeste.Mod.SkinModHelper {
 
         private static FancyText.Portrait ReplacePortraitPath(FancyText.Portrait portrait) {
             if (UniqueSkinSelected()) {
-                string skinModPortraitSpriteId = portrait.SpriteId + "_" + Settings.SelectedSkinMod;
+                string skinModPortraitSpriteId = portrait.SpriteId + "_" + ActiveSkinMod;
                 if (GFX.PortraitsSpriteBank.Has(skinModPortraitSpriteId)) {
                     portrait.Sprite = skinModPortraitSpriteId.Replace("portrait_", "");
                 }
@@ -375,7 +391,7 @@ namespace Celeste.Mod.SkinModHelper {
         private static string ReplaceTextboxPath(string textboxPath) {
             if (UniqueSkinSelected()) {
                 string originalPortraitId = textboxPath.Split('_')[0].Replace("textbox/", ""); // "textbox/[orig portrait id]_[skin id]_ask"
-                string newTextboxPath = "textbox/" + skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + originalPortraitId + "_ask";
+                string newTextboxPath = "textbox/" + skinConfigs[ActiveSkinMod].GetUniquePath() + originalPortraitId + "_ask";
                 textboxPath = GFX.Portraits.Has(newTextboxPath) ? newTextboxPath : "textbox/" + originalPortraitId + "_ask";
             }
 
@@ -391,7 +407,7 @@ namespace Celeste.Mod.SkinModHelper {
             FlyFeather.P_Boost.Source = GFX.Game["particles/feather"];
 
             if (UniqueSkinSelected()) {
-                string featherParticle = skinConfigs[Settings.SelectedSkinMod].GetUniquePath() + "particles/feather";
+                string featherParticle = skinConfigs[ActiveSkinMod].GetUniquePath() + "particles/feather";
                 if (GFX.Game.Has(featherParticle)) {
                     FlyFeather.P_Collect.Source = GFX.Game[featherParticle];
                     FlyFeather.P_Boost.Source = GFX.Game[featherParticle];
@@ -453,6 +469,19 @@ namespace Celeste.Mod.SkinModHelper {
         // Trigger when we change the setting, store the new one. If in-level, redraw player sprite.
         public static void UpdateSkin(string newSkinId) {
             Settings.SelectedSkinMod = newSkinId;
+            AfterSkinUpdated();
+        }
+
+        public static void SetSessionSkin(string newSkinId) {
+            if (Session == null) {
+                Logger.Log(LogLevel.Warn, "SkinModHelper", "Attempted to apply session skin when there is no session");
+                return;
+            }
+            Session.SkinOverride = newSkinId;
+            AfterSkinUpdated();
+        }
+
+        private static void AfterSkinUpdated() {
             UpdateParticles();
 
             Player player = Engine.Scene?.Tracker.GetEntity<Player>();
@@ -466,7 +495,7 @@ namespace Celeste.Mod.SkinModHelper {
         }
 
         public static bool UniqueSkinSelected() {
-            return Settings.SelectedSkinMod != null && Settings.SelectedSkinMod != DEFAULT;
+            return ActiveSkinMod != DEFAULT;
         }
     }
 }
